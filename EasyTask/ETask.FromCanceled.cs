@@ -6,6 +6,15 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        static readonly CancellationToken cancelToken = new Func<CancellationToken>(() =>
+            {
+                var source = new CancellationTokenSource();
+                source.Cancel();
+                return source.Token;
+            })();
+        public static readonly ETask CanceledTask = new ETask(
+            new CanceledSource(new OperationCanceledException(cancelToken)), 0);
+
         public static ETask FromCanceled(CancellationToken token)
         {
             if (token == CancellationToken.None)
@@ -24,12 +33,12 @@ namespace EasyTask
 
         internal sealed class CanceledSource : IETaskSource
         {
-            readonly OperationCanceledException exception;
+            public readonly OperationCanceledException Exception;
             
             public CanceledSource(OperationCanceledException exception)
-                => this.exception = exception;
+                => Exception = exception;
             
-            public void GetResult(short _) => throw exception;
+            public void GetResult(short _) => throw Exception;
             
             public ETaskStatus GetStatus(short _) => ETaskStatus.Canceled;
             

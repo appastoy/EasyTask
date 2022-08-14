@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace EasyTask
 {
-    public readonly partial struct ETask
+    partial struct ETask
     {
         public static ETask Delay(TimeSpan duration, CancellationToken cancellationToken = default)
         {

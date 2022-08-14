@@ -6,10 +6,25 @@ namespace EasyTask.Tests;
 public class ETaskTests
 {
     [Fact]
-    public async Task Yield_Should_Not_Change_Thread()
+    public void ETask_Should_Convert_Task()
     {
-        await AsyncContext.Run(Func);
-        static async ETask Func()
+        var completedTask = ETask.CompletedTask.ToTask();
+        completedTask.IsCompletedSuccessfully.Should().BeTrue();
+
+        var canceledTask = ETask.CanceledTask.ToTask();
+        canceledTask.IsCanceled.Should().BeTrue();
+
+        var exceptionETask = ETask.FromException(new Exception());
+        var exceptionTask = exceptionETask.ToTask();
+        exceptionTask.IsFaulted.Should().BeTrue();
+        exceptionTask.Exception.InnerException.Should().Be(exceptionETask.Exception);
+    }
+
+    [Fact]
+    public void Yield_Should_Not_Change_Thread()
+    {
+        AsyncContext.Run(Func);
+        static async Task Func()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
             await ETask.Yield();
@@ -19,10 +34,10 @@ public class ETaskTests
     }
 
     [Fact]
-    public async Task Delay_Should_Not_Change_Thread()
+    public void Delay_Should_Not_Change_Thread()
     {
-        await AsyncContext.Run(Func);
-        static async ETask Func()
+        AsyncContext.Run(Func);
+        static async Task Func()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
             await ETask.Delay(1);
@@ -32,10 +47,10 @@ public class ETaskTests
     }
 
     [Fact]
-    public async Task SwitchToThreadPool_Should_Change_Thread()
+    public void SwitchToThreadPool_Should_Change_Thread()
     {
-        await AsyncContext.Run(Func);
-        static async ETask Func()
+        AsyncContext.Run(Func);
+        static async Task Func()
         {
             int threadId = Thread.CurrentThread.ManagedThreadId;
             await ETask.SwitchToThreadPool();
@@ -45,14 +60,16 @@ public class ETaskTests
     }
 
     [Fact]
-    public async Task SwitchToMainThread_Should_Change_To_Main_Thread()
+    public void SwitchToMainThread_Should_Change_To_Main_Thread()
     {
-        await AsyncContext.Run(Func);
-        static async ETask Func()
+        AsyncContext.Run(Func);
+        static async Task Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
+            var mainThreadContext = SynchronizationContext.Current;
+            ETask.SetMainThreadSynchronizationContext(mainThreadContext);
             int threadId = Thread.CurrentThread.ManagedThreadId;
             await ETask.SwitchToThreadPool();
+            SynchronizationContext.Current.Should().NotBe(mainThreadContext);
             await ETask.SwitchToMainThread();
             int threadIdAfterYield = Thread.CurrentThread.ManagedThreadId;
             threadId.Should().Be(threadIdAfterYield);

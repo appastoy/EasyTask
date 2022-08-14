@@ -16,10 +16,13 @@ namespace EasyTask
         public ETaskStatus Status => source?.GetStatus(token) ?? ETaskStatus.Succeeded;
         public bool IsCompleted => Status != ETaskStatus.Pending;
         public bool IsCompletedSuccessfully => Status == ETaskStatus.Succeeded;
-        public bool IsFault => Status == ETaskStatus.Faulted;
+        public bool IsFaulted => Status == ETaskStatus.Faulted;
         public bool IsCanceled => Status == ETaskStatus.Canceled;
 
-        public Exception? Exception => source is ExceptionSource exceptionSource ? exceptionSource.GetException() : null;
+        public Exception? Exception => 
+            source is ExceptionSource exceptionSource ? exceptionSource.GetException() :
+            source is CanceledSource canceledSource ? canceledSource.Exception : 
+            null;
 
         internal ETask(IETaskSource source, short token)
         {

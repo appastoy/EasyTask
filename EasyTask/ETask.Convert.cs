@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EasyTask
@@ -8,12 +9,25 @@ namespace EasyTask
         static readonly Action<object?> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
         public ValueTask ToValueTask()
-            => source is null ? default : new ValueTask(source, token);
+        {
+            if (source is null || IsCompletedSuccessfully)
+                return default;
+
+            return new ValueTask(source, token);
+        }
+            
 
         public Task ToTask()
         {
-            if (source is null)
+            if (source is null || IsCompletedSuccessfully)
                 return Task.CompletedTask;
+
+            if (IsCanceled)
+                return Task.FromCanceled(Exception is OperationCanceledException oce ? 
+                    oce.CancellationToken : cancelToken);
+
+            if (IsFaulted)
+                return Task.FromException(Exception);
 
             var taskCompletionSource = new TaskCompletionSource<object?>();
             source.OnCompleted(InvokeTaskSetResultDelegate, taskCompletionSource, token);
