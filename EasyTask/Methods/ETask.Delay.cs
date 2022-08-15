@@ -1,4 +1,4 @@
-﻿using EasyTask.Sources;
+﻿using EasyTask.Promises;
 using System;
 using System.Threading;
 

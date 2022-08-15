@@ -1,8 +1,10 @@
 ﻿using EasyTask.CompilerServices;
+using EasyTask.Helpers;
 using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace EasyTask
 {
@@ -10,6 +12,8 @@ namespace EasyTask
     [AsyncMethodBuilder(typeof(ETaskMethodBuilder))]
     public readonly partial struct ETask
     {
+        public static readonly ETask CompletedTask = new ETask();
+
         readonly IETaskSource source;
         readonly short token;
 
@@ -28,6 +32,46 @@ namespace EasyTask
         {
             this.source = source;
             this.token = token;
+        }
+
+        public Awaiter GetAwaiter()
+        {
+            return new Awaiter(in this);
+        }
+
+        public readonly struct Awaiter : ICriticalNotifyCompletion
+        {
+            readonly ETask task;
+
+            public bool IsCompleted => task.IsCompleted;
+
+            internal Awaiter(in ETask task)
+            {
+                this.task = task;
+            }
+
+            public void GetResult()
+            {
+                task.source?.GetResult(task.token);
+            }
+
+            public void OnCompleted(Action continuation)
+                => UnsafeOnCompleted(continuation);
+
+            public void UnsafeOnCompleted(Action continuation)
+            {
+                if (task.source is null)
+                    continuation?.Invoke();
+                else
+                    OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
+            }
+            internal void OnCompleted(Action<object> continuation, object state)
+            {
+                if (task.source is null)
+                    continuation?.Invoke(state);
+                else
+                    task.source?.OnCompleted(continuation, state, task.token);
+            }
         }
     }
 }

@@ -6,14 +6,8 @@ namespace EasyTask
 {
     partial struct ETask
     {
-        static readonly CancellationToken cancelToken = new Func<CancellationToken>(() =>
-            {
-                var source = new CancellationTokenSource();
-                source.Cancel();
-                return source.Token;
-            })();
         public static readonly ETask CanceledTask = new ETask(
-            new CanceledSource(new OperationCanceledException(cancelToken)), 0);
+            new CanceledSource(new OperationCanceledException(new CancellationToken(true))), 0);
 
         public static ETask FromCanceled(CancellationToken token)
         {

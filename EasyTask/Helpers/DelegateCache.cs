@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace EasyTask
+namespace EasyTask.Helpers
 {
     internal static class DelegateCache
     {

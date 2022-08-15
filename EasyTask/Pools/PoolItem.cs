@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace EasyTask.Pools
 {
-    internal class PoolItem<TItem>
+    internal class PoolItem<TItem> : IDisposable
         where TItem : PoolItem<TItem>, new()
     {
         static TItem? poolRoot;
@@ -37,6 +37,8 @@ namespace EasyTask.Pools
         }
 
         protected virtual void BeforeReturn() { }
+
+        public void Dispose() => Return();
 
         readonly struct ScopeLocker : IDisposable
         {

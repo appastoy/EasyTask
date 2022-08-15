@@ -1,7 +1,8 @@
-﻿using System;
+﻿using EasyTask.Promises;
+using System;
 using System.Runtime.CompilerServices;
 
-namespace EasyTask.Sources
+namespace EasyTask.CompilerServices
 {
     internal interface IMoveNextPromise : IPromise
     {

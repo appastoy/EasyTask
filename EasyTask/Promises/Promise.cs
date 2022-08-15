@@ -1,9 +1,10 @@
 ﻿using EasyTask.Pools;
+using EasyTask.Sources;
 using System;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 
-namespace EasyTask.Sources
+namespace EasyTask.Promises
 {
     internal class Promise<TPromise> : PoolItem<TPromise>, IPromise
         where TPromise : Promise<TPromise>, new()
@@ -55,7 +56,7 @@ namespace EasyTask.Sources
         {
             if (error is null)
                 return;
-         
+
             try
             {
                 if (error is OperationCanceledException oce)
@@ -71,23 +72,28 @@ namespace EasyTask.Sources
 
         public void TrySetResult()
         {
-            EnsureCompletedFirst();
-            continuation?.Invoke(state);
+            if (IsCompletedFirst())
+                continuation?.Invoke(state);
         }
 
         public void TrySetException(Exception exception)
         {
-            EnsureCompletedFirst();
-            error = exception is OperationCanceledException oce ? (object)oce :
-                    new ExceptionHolder(ExceptionDispatchInfo.Capture(exception));
-            continuation?.Invoke(state);
+            if (IsCompletedFirst())
+            {
+                error = exception is OperationCanceledException oce ? (object)oce :
+                        new ExceptionHolder(ExceptionDispatchInfo.Capture(exception));
+                continuation?.Invoke(state);
+            }
         }
 
         public void TrySetCanceled(CancellationToken token = default)
         {
-            EnsureCompletedFirst();
-            error = new OperationCanceledException(token);
-            continuation?.Invoke(state);
+            if (IsCompletedFirst())
+            {
+                error = new OperationCanceledException(token == CancellationToken.None ?
+                    new CancellationToken(true) : token);
+                continuation?.Invoke(state);
+            }
         }
 
         public ETaskStatus GetStatus(short token)
@@ -121,10 +127,6 @@ namespace EasyTask.Sources
                 throw new InvalidOperationException("Task already awaited. You should not await more than twice.");
         }
 
-        void EnsureCompletedFirst()
-        {
-            if (Interlocked.Increment(ref completedCheck) != 1)
-                throw new InvalidOperationException("Task already completed.");
-        }
+        bool IsCompletedFirst() => Interlocked.Increment(ref completedCheck) == 1;
     }
 }

@@ -24,7 +24,7 @@ namespace EasyTask
 
             if (IsCanceled)
                 return Task.FromCanceled(Exception is OperationCanceledException oce ? 
-                    oce.CancellationToken : cancelToken);
+                    oce.CancellationToken : new CancellationToken(true));
 
             if (IsFaulted)
                 return Task.FromException(Exception);

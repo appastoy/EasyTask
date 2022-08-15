@@ -1,7 +1,8 @@
-﻿using System;
+﻿using EasyTask.Sources;
+using System;
 using System.Threading;
 
-namespace EasyTask.Sources
+namespace EasyTask.Promises
 {
     internal interface IPromise : IETaskSource
     {
