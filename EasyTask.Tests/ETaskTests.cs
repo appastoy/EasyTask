@@ -8,16 +8,19 @@ public class ETaskTests
     [Fact]
     public void ETask_Should_Convert_Task()
     {
-        var completedTask = ETask.CompletedTask.ToTask();
+        var completedTask = ETask.CompletedTask.AsTask();
         completedTask.IsCompletedSuccessfully.Should().BeTrue();
 
-        var canceledTask = ETask.CanceledTask.ToTask();
+        var canceledTask = ETask.CanceledTask.AsTask();
         canceledTask.IsCanceled.Should().BeTrue();
 
         var exceptionETask = ETask.FromException(new Exception());
-        var exceptionTask = exceptionETask.ToTask();
+        var exceptionTask = exceptionETask.AsTask();
         exceptionTask.IsFaulted.Should().BeTrue();
+
+#pragma warning disable CS8602 // null 가능 참조에 대한 역참조입니다.
         exceptionTask.Exception.InnerException.Should().Be(exceptionETask.Exception);
+#pragma warning restore CS8602 // null 가능 참조에 대한 역참조입니다.
     }
 
     [Fact]

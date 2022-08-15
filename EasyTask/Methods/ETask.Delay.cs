@@ -1,4 +1,5 @@
-﻿using EasyTask.Promises;
+﻿using EasyTask.Helpers;
+using EasyTask.Promises;
 using System;
 using System.Threading;
 
@@ -40,8 +41,6 @@ namespace EasyTask
             DateTime endTime;
             CancellationToken cancellationToken;
             Action trySetResultAction;
-
-            public ETask Task => new ETask(this, Token);
 
             public DelayPromise() => trySetResultAction = TrySetResult;
 

@@ -9,18 +9,14 @@ namespace EasyTask
     partial struct ETask
     {
         public static ETask WhenAny(params ETask[] tasks)
-        {
-            var promise = WhenAnyPromise.Create(tasks);
-            return new ETask(promise, promise.Token);
-        }
+            => WhenAnyPromise.Create(tasks).Task;
 
         public static ETask WhenAny(IEnumerable<ETask> tasks)
         {
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
 
-            var promise = WhenAnyPromise.Create(tasks.ToReadOnlyList());
-            return new ETask(promise, promise.Token);
+            return WhenAnyPromise.Create(tasks.ToReadOnlyList()).Task;
         }
 
         internal sealed class WhenAnyPromise : WhenPromise<WhenAnyPromise>

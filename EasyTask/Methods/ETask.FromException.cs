@@ -17,9 +17,20 @@ namespace EasyTask
             return new ETask(new ExceptionSource(ExceptionDispatchInfo.Capture(exception)), 0);
         }
 
-        internal sealed class ExceptionSource : IETaskSource
+        public static ETask<T> FromException<T>(Exception exception)
         {
-            readonly ExceptionDispatchInfo exceptionDispatchInfo;
+            if (exception == null)
+                throw new ArgumentNullException(nameof(exception));
+
+            if (exception is OperationCanceledException oce)
+                return FromCanceled<T>(oce);
+
+            return new ETask<T>(new ExceptionSource<T>(ExceptionDispatchInfo.Capture(exception)), 0);
+        }
+
+        internal class ExceptionSource : IETaskSource
+        {
+            protected readonly ExceptionDispatchInfo exceptionDispatchInfo;
             bool hasGetResultOrGetException;
 
             public ExceptionSource(ExceptionDispatchInfo exceptionDispatchInfo)
@@ -41,10 +52,10 @@ namespace EasyTask
 
             public ETaskStatus GetStatus(short _) => ETaskStatus.Faulted;
 
-            public void OnCompleted(Action<object?>? continuation, object? state, short token)
+            public void OnCompleted(Action<object> continuation, object state, short token)
                 => continuation?.Invoke(state);
 
-            void EnsureUseException()
+            protected void EnsureUseException()
             {
                 if (!hasGetResultOrGetException)
                 {
@@ -57,6 +68,22 @@ namespace EasyTask
             {
                 if (!hasGetResultOrGetException)
                     PublishUnhandledException(exceptionDispatchInfo);
+            }
+        }
+
+        internal sealed class ExceptionSource<T> : ExceptionSource, IETaskSource<T>
+        {
+            public ExceptionSource(ExceptionDispatchInfo exceptionDispatchInfo)
+                : base(exceptionDispatchInfo) 
+            {
+
+            }
+
+            new public T GetResult(short _)
+            {
+                EnsureUseException();
+                exceptionDispatchInfo.Throw();
+                return default;
             }
         }
     }

@@ -4,19 +4,19 @@ using System.Runtime.CompilerServices;
 
 namespace EasyTask.CompilerServices
 {
-
-    internal interface IMoveNextPromise : IPromise, IMoveNextRunner
+    internal interface IMoveNextRunner
     {
-
+        Action InvokeMoveNext { get; }
+        void Return();
     }
 
-    internal sealed class MoveNextPromise<TStateMachine> : Promise<MoveNextPromise<TStateMachine>>, IMoveNextPromise
+    internal sealed class MoveNextRunner<TStateMachine> : Promise<MoveNextRunner<TStateMachine>>, IMoveNextRunner
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;
         public Action InvokeMoveNext { get; }
 
-        public static MoveNextPromise<TStateMachine> Create(ref TStateMachine stateMachine)
+        public static MoveNextRunner<TStateMachine> Create(ref TStateMachine stateMachine)
         {
             var promise = Rent();
             promise.stateMachine = stateMachine;
@@ -24,7 +24,7 @@ namespace EasyTask.CompilerServices
         }
 
 #pragma warning disable CS8618
-        public MoveNextPromise() => InvokeMoveNext = MoveNext;
+        public MoveNextRunner() => InvokeMoveNext = MoveNext;
 #pragma warning restore CS8618
 
         void MoveNext() => stateMachine.MoveNext();

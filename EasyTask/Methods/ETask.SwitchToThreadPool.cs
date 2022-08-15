@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasyTask.Helpers;
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -18,10 +19,11 @@ namespace EasyTask
 
                 public void GetResult() { }
 
-                public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
+                public void OnCompleted(Action continuation)
+                    => ThreadPool.QueueUserWorkItem(DelegateCache.InvokeAsActionT, continuation, false);
 
                 public void UnsafeOnCompleted(Action continuation)
-                    => ThreadPool.QueueUserWorkItem(DelegateCache.InvokeAsActionT, continuation, false);
+                    => ThreadPool.UnsafeQueueUserWorkItem(DelegateCache.InvokeAsWaitCallback, continuation);
             }
         }
     }

@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace EasyTask
 {
     partial struct ETask
     {
-        internal static SynchronizationContext? mainThreadSynchronizationContext;
+        internal static SynchronizationContext mainThreadSynchronizationContext;
 
         static ETask() { mainThreadSynchronizationContext = SynchronizationContext.Current; }
 
@@ -18,8 +17,14 @@ namespace EasyTask
         internal static void EnsureMainThreadSynchronizationContext()
         {
             if (mainThreadSynchronizationContext == null)
+            {
                 mainThreadSynchronizationContext = SynchronizationContext.Current;
+                ValidateMainThreadSynchronizationContext();
+            }
+        }
 
+        internal static void ValidateMainThreadSynchronizationContext()
+        {
             if (mainThreadSynchronizationContext == null)
                 throw new InvalidOperationException("Main Thread SynchronizationContext is null. You should it to call ETask.SetMainThreadSynchronizationContext().");
         }

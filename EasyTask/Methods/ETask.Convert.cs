@@ -1,4 +1,6 @@
-﻿using System;
+﻿using EasyTask.Promises;
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,16 +10,15 @@ namespace EasyTask
     {
         static readonly Action<object?> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
-        public ValueTask ToValueTask()
+        public ValueTask AsValueTask()
         {
             if (source is null || IsCompletedSuccessfully)
                 return default;
 
             return new ValueTask(source, token);
         }
-            
 
-        public Task ToTask()
+        public Task AsTask()
         {
             if (source is null || IsCompletedSuccessfully)
                 return Task.CompletedTask;

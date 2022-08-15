@@ -1,33 +1,34 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 
 namespace EasyTask.CompilerServices
 {
     [StructLayout(LayoutKind.Auto)]
-    public struct ETaskMethodBuilder
+    public struct ETaskVoidMethodBuilder
     {
-        IMoveNextPromise? promise;
-        Exception? exception;
+        IMoveNextRunner? promise;
 
-        public ETask Task =>
-            exception != null ? ETask.FromException(exception) :
-            promise != null ? new ETask(promise, promise.Token) :
-            ETask.CompletedTask;
+        public ETaskVoid Task => default;
 
-        public static ETaskMethodBuilder Create() => default;
+        public static ETaskVoidMethodBuilder Create() => default;
 
         public void SetException(Exception exception)
         {
-            if (promise is null)
-                this.exception = exception;
-            else
-                promise.TrySetException(exception);
+            try
+            {
+                promise?.Return();
+            }
+            finally
+            {
+                ETask.PublishUnhandledException(ExceptionDispatchInfo.Capture(exception));
+            }
         }
 
         public void SetResult()
         {
-            promise?.TrySetResult();
+            promise?.Return();
         }
 
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
@@ -36,7 +37,7 @@ namespace EasyTask.CompilerServices
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            promise ??= MoveNextPromise<TStateMachine>.Create(ref stateMachine);
+            promise ??= MoveNextRunner<TStateMachine>.Create(ref stateMachine);
             awaiter.OnCompleted(promise.InvokeMoveNext);
         }
 
@@ -46,7 +47,7 @@ namespace EasyTask.CompilerServices
             where TAwaiter : ICriticalNotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            promise ??= MoveNextPromise<TStateMachine>.Create(ref stateMachine);
+            promise ??= MoveNextRunner<TStateMachine>.Create(ref stateMachine);
             awaiter.UnsafeOnCompleted(promise.InvokeMoveNext);
         }
 

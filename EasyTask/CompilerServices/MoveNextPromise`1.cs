@@ -5,18 +5,18 @@ using System.Runtime.CompilerServices;
 namespace EasyTask.CompilerServices
 {
 
-    internal interface IMoveNextPromise : IPromise, IMoveNextRunner
+    internal interface IMoveNextPromise<T> : IPromise<T>, IMoveNextRunner
     {
 
     }
 
-    internal sealed class MoveNextPromise<TStateMachine> : Promise<MoveNextPromise<TStateMachine>>, IMoveNextPromise
+    internal sealed class MoveNextPromise<TStateMachine, T> : Promise<MoveNextPromise<TStateMachine, T>, T>, IMoveNextPromise<T>
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;
         public Action InvokeMoveNext { get; }
 
-        public static MoveNextPromise<TStateMachine> Create(ref TStateMachine stateMachine)
+        public static MoveNextPromise<TStateMachine, T> Create(ref TStateMachine stateMachine)
         {
             var promise = Rent();
             promise.stateMachine = stateMachine;
