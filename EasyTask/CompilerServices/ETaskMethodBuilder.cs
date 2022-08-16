@@ -12,7 +12,7 @@ namespace EasyTask.CompilerServices
 
         public ETask Task =>
             exception != null ? ETask.FromException(exception) :
-            promise != null ? new ETask(promise, promise.Token) :
+            promise != null ? promise.Task :
             ETask.CompletedTask;
 
         public static ETaskMethodBuilder Create() => default;

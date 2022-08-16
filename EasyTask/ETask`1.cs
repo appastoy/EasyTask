@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace EasyTask
 {
-    [StructLayout(LayoutKind.Auto, Pack = 2)]
+    [StructLayout(LayoutKind.Auto)]
     [AsyncMethodBuilder(typeof(ETaskMethodBuilder<>))]
     public readonly partial struct ETask<T>
     {
@@ -71,12 +71,11 @@ namespace EasyTask
 
             public T GetResult()
             {
-                if (task.source != null)
-                    return task.source.GetResult(task.token);
+                if (task.source is null)
+                    return task.result;
                 else
-#pragma warning disable CS8603 // 가능한 null 참조 반환입니다.
-                    return default;
-#pragma warning restore CS8603 // 가능한 null 참조 반환입니다.
+                    return task.source.GetResult(task.token);
+
             }
 
             public void OnCompleted(Action continuation)
@@ -87,7 +86,7 @@ namespace EasyTask
                 if (task.source is null)
                     continuation.Invoke();
                 else
-                    OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
+                    OnCompleted(DelegateCache.InvokeAsActionObjectNullable, continuation);
             }
             internal void OnCompleted(Action<object> continuation, object state)
             {

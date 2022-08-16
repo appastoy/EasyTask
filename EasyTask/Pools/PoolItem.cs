@@ -3,6 +3,7 @@ using System.Threading;
 
 namespace EasyTask.Pools
 {
+
     internal class PoolItem<TItem> : IDisposable
         where TItem : PoolItem<TItem>, new()
     {
@@ -21,10 +22,13 @@ namespace EasyTask.Pools
             poolRoot = poolRoot.next;
             rentItem.next = null;
             poolSize--;
+            rentItem.BeforeRent();
             return rentItem;
         }
 
         TItem? next;
+
+        protected virtual void BeforeRent() { }
 
         public void Return()
         {

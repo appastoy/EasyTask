@@ -9,6 +9,8 @@ namespace EasyTask
     {
         static readonly Action<object?> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
+        public ETask AsETask() => new ETask(source, token);
+
         public ValueTask<T> AsValueTask()
         {
             if (source is null || IsCompletedSuccessfully)

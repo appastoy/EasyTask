@@ -25,15 +25,13 @@ namespace EasyTask
             public static DelayPromise Create(TimeSpan duration, CancellationToken cancellationToken)
             {
                 var promise = Rent();
-                promise.Reset();
-                promise.sync = SynchronizationContext.Current;
-                promise.endTime = DateTime.UtcNow.Add(duration);
                 promise.cancellationToken = cancellationToken;
+                promise.endTime = DateTime.UtcNow.Add(duration);
+                promise.sync = SynchronizationContext.Current;
                 if (cancellationToken == CancellationToken.None)
                     ThreadPool.QueueUserWorkItem(InvokeDelayCheck, promise, false);
                 else
                     ThreadPool.QueueUserWorkItem(InvokeDelayCheckWithCancel, promise, false);
-
                 return promise;
             }
 

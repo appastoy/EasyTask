@@ -1,4 +1,5 @@
-﻿using EasyTask.Pools;
+﻿using EasyTask.Helpers;
+using EasyTask.Pools;
 using EasyTask.Sources;
 using System;
 using System.Runtime.ExceptionServices;
@@ -23,7 +24,7 @@ namespace EasyTask.Promises
 
         public short Token => token;
 
-        public void Reset()
+        protected override void BeforeRent()
         {
             ReportUnhandledError();
 
@@ -125,8 +126,7 @@ namespace EasyTask.Promises
         public void OnCompleted(Action<object> continuation, object state, short token)
         {
             ValidateToken(token);
-            SetContinuation(continuation);
-            this.state = state;
+            SetContinuation(continuation, state);
         }
 
         protected void ValidateToken(short token)
@@ -135,14 +135,33 @@ namespace EasyTask.Promises
                 throw new InvalidOperationException("Invalid token");
         }
 
-        protected void InvokeContinuation() => continuation?.Invoke(state);
+        protected void InvokeContinuation()
+        {
+            if (continuation != null || Interlocked.CompareExchange(ref continuation, DelegateCache.InvokeNoop, null) != null)
+            {
+                var tempContinuation = continuation;
+                var tempState = state;
+                continuation = null;
+                state = null;
+                tempContinuation.Invoke(tempState);
+            }
+        }
 
         protected bool IsCompletedFirst() => Interlocked.Increment(ref completedCheck) == 1;
 
-        void SetContinuation(Action<object> continuation)
+        void SetContinuation(Action<object> continuation, object state)
         {
-            if (Interlocked.CompareExchange(ref this.continuation, continuation, null) != null)
+            this.state = state;
+            var oldContinuation = Interlocked.CompareExchange(ref this.continuation, continuation, null);
+            if (oldContinuation == null)
+                return;
+
+            if (oldContinuation != DelegateCache.InvokeNoop)
                 throw new InvalidOperationException("Task already awaited. You should not await more than twice.");
+
+            this.continuation = null;
+            this.state = null;
+            continuation.Invoke(state);
         }
     }
 }

@@ -25,6 +25,12 @@ namespace EasyTask
 
             protected override bool CheckCompleted()
                 => Interlocked.Increment(ref completedCount) == TaskCount;
+
+            protected override void BeforeReturn()
+            {
+                completedCount = 0;
+                base.BeforeReturn();
+            }
         }
     }
 }

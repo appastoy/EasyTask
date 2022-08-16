@@ -60,16 +60,16 @@ namespace EasyTask
             public void UnsafeOnCompleted(Action continuation)
             {
                 if (task.source is null)
-                    continuation?.Invoke();
+                    continuation.Invoke();
                 else
                     OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
             }
             internal void OnCompleted(Action<object> continuation, object state)
             {
                 if (task.source is null)
-                    continuation?.Invoke(state);
+                    continuation.Invoke(state);
                 else
-                    task.source?.OnCompleted(continuation, state, task.token);
+                    task.source.OnCompleted(continuation, state, task.token);
             }
         }
     }
