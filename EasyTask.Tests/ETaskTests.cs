@@ -51,10 +51,14 @@ public class ETaskTests
 #pragma warning restore CS8602 // null 가능 참조에 대한 역참조입니다.
 
         var value = 1;
-        var notCompletedTask = ETask.Run(() => value = 2).AsValueTask();
-        value.Should().Be(1);
-        await notCompletedTask;
+        await ETask.Run(() => SetValueWithDelay(2, 100)).AsValueTask();
         value.Should().Be(2);
+
+        async ETask SetValueWithDelay(int v, int delayMilliSeconds)
+        {
+            await ETask.Delay(delayMilliSeconds);
+            value = v;
+        }
     }
 
     [Fact]
