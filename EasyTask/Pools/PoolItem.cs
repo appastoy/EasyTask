@@ -4,7 +4,7 @@ using System.Threading;
 namespace EasyTask.Pools
 {
 
-    internal class PoolItem<TItem> : IDisposable
+    public class PoolItem<TItem> : IDisposable
         where TItem : PoolItem<TItem>, new()
     {
         static TItem? poolRoot;
@@ -23,18 +23,24 @@ namespace EasyTask.Pools
             rentItem.next = null;
             poolSize--;
             rentItem.BeforeRent();
+            rentItem.isRented = true;
             return rentItem;
         }
 
+        bool isRented;
         TItem? next;
 
         protected virtual void BeforeRent() { }
 
         public void Return()
         {
+            if (!isRented)
+                return;
+
             using var _ = ScopeLocker.Lock();
          
             BeforeReturn();
+            isRented = false;
             next = poolRoot;
             poolRoot = (TItem)this;
             poolSize++;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.ExceptionServices;
-using EasyTask.Sources;
 
 namespace EasyTask
 {

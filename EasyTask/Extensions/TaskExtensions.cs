@@ -21,15 +21,15 @@ namespace EasyTask
             if (task.IsCanceled)
                 return ETask.FromCanceled(GetOperationCanceledException(task.Exception));
 
-            var promise = ETaskPromise.Rent();
+            var ecs = ETaskCompletionSource.Rent();
             task.ContinueWith(
                 InvokeOnContinueWith
-                , promise
+                , ecs
                 , captureContext ? 
                     TaskScheduler.FromCurrentSynchronizationContext() : 
                     TaskScheduler.Current);
             
-            return promise.Task;
+            return ecs.Task;
         }
 
         public static ETask<T> AsETask<T>(this Task<T> task, bool captureContext = true)
@@ -46,15 +46,15 @@ namespace EasyTask
             if (task.IsCanceled)
                 return ETask.FromCanceled<T>(GetOperationCanceledException(task.Exception));
 
-            var promise = ETaskPromise<T>.Rent();
+            var ecs = ETaskCompletionSource<T>.Rent();
             task.ContinueWith(
                 TaskDelegateCache<T>.InvokeOnContinueWith
-                , promise
+                , ecs
                 , captureContext ?
                     TaskScheduler.FromCurrentSynchronizationContext() :
                     TaskScheduler.Current);
 
-            return promise.Task;
+            return ecs.Task;
         }
 
         static OperationCanceledException GetOperationCanceledException(AggregateException exception)
@@ -72,7 +72,7 @@ namespace EasyTask
 
         static void OnContinueWith(Task task, object obj)
         {
-            var promise = (ETaskPromise)obj;
+            var promise = (ETaskCompletionSource)obj;
 
             try
             {
@@ -106,7 +106,7 @@ namespace EasyTask
 
             static void OnContinueWith(Task<T> task, object obj)
             {
-                var promise = (ETaskPromise<T>)obj;
+                var promise = (ETaskCompletionSource<T>)obj;
 
                 try
                 {

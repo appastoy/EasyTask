@@ -1,5 +1,6 @@
 ﻿using EasyTask.Helpers;
-using EasyTask.Promises;
+using EasyTask.Pools;
+using EasyTask.Sources;
 using System;
 using System.Threading;
 
@@ -17,10 +18,11 @@ namespace EasyTask
             return Delay(new TimeSpan(milliseconds * TimeSpan.TicksPerMillisecond), cancellationToken);
         }
 
-        internal sealed class DelayPromise : Promise<DelayPromise>
+        internal sealed class DelayPromise : ETaskCompletionSourceGeneric<DelayPromise>
         {
             static readonly Action<DelayPromise> InvokeDelayCheck = DelayCheck;
             static readonly Action<DelayPromise> InvokeDelayCheckWithCancel = DelayCheckWithCancel;
+            static readonly SendOrPostCallback InvokeOnTrySetCanceled = OnTrySetCanceled;
 
             public static DelayPromise Create(TimeSpan duration, CancellationToken cancellationToken)
             {
@@ -40,7 +42,10 @@ namespace EasyTask
             CancellationToken cancellationToken;
             Action trySetResultAction;
 
-            public DelayPromise() => trySetResultAction = TrySetResult;
+            public DelayPromise()
+            {
+                trySetResultAction = TrySetResult;
+            }
 
             protected override void BeforeReturn()
             {
@@ -56,6 +61,14 @@ namespace EasyTask
                     TrySetResult();
             }
 
+            void TrySetCanceledWithSync(OperationCanceledException canceledException)
+            {
+                if (sync != null)
+                    sync.Post(InvokeOnTrySetCanceled, TuplePool.Rent(this, canceledException));
+                else
+                    TrySetCanceled(canceledException);
+            }
+
             static void DelayCheck(DelayPromise promise)
             {
                 var duration = promise.endTime - DateTime.UtcNow;
@@ -66,14 +79,27 @@ namespace EasyTask
 
             static void DelayCheckWithCancel(DelayPromise promise)
             {
-                promise.cancellationToken.ThrowIfCancellationRequested();
-
-                while (DateTime.UtcNow < promise.endTime)
+                try
                 {
-                    Thread.Yield();
                     promise.cancellationToken.ThrowIfCancellationRequested();
+
+                    while (DateTime.UtcNow < promise.endTime)
+                    {
+                        Thread.Yield();
+                        promise.cancellationToken.ThrowIfCancellationRequested();
+                    }
+                    promise.TrySetResultWithSync();
                 }
-                promise.TrySetResultWithSync();
+                catch (OperationCanceledException cancelException)
+                {
+                    promise.TrySetCanceledWithSync(cancelException);
+                }
+            }
+
+            static void OnTrySetCanceled(object obj)
+            {
+                using var tuple = (FieldTuple<DelayPromise, OperationCanceledException>)obj;
+                tuple._1.TrySetCanceled(tuple._2);
             }
         }
     }

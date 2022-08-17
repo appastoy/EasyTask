@@ -5,30 +5,31 @@ using System.Collections.Generic;
 
 namespace EasyTask.Promises
 {
-    internal abstract class WhenPromise<TPromise> : ETaskCompletionSourceGeneric<TPromise>
-        where TPromise : WhenPromise<TPromise>, new()
+    internal abstract class WhenPromise<TPromise, T, TResult> : ETaskCompletionSourceGeneric<TPromise, TResult>
+        where TPromise : WhenPromise<TPromise, T, TResult>, new()
     {
         static readonly Action<object> InvokeOnTaskCompleted = OnTaskCompletedCallback;
 
-        IReadOnlyList<ETask>? tasks;
+        IReadOnlyList<ETask<T>>? tasks;
         protected int taskCount => tasks?.Count ?? 0;
         protected int countCompleted;
 
-        public static TPromise Create(IReadOnlyList<ETask> tasks)
+        public static TPromise Create(IReadOnlyList<ETask<T>> tasks)
         {
             var promise = Rent();
             promise.Initialize(tasks);
             return promise;
         }
 
-        void Initialize(IReadOnlyList<ETask> tasks)
+        void Initialize(IReadOnlyList<ETask<T>> tasks)
         {
             this.tasks = tasks;
             countCompleted = 0;
 
-            foreach (var task in tasks)
+            for (int i = 0; i < tasks.Count; i++)
             {
-                ETask.Awaiter awaiter;
+                var task = tasks[i];
+                ETask<T>.Awaiter awaiter;
                 try
                 {
                     awaiter = task.GetAwaiter();
@@ -41,39 +42,22 @@ namespace EasyTask.Promises
 
                 if (awaiter.IsCompleted)
                 {
-                    OnTaskCompleted(in awaiter);
+                    OnTaskCompleted(in awaiter, i);
                 }
                 else
                 {
-                    awaiter.OnCompleted(InvokeOnTaskCompleted, TuplePool.Rent((TPromise)this, awaiter));
+                    awaiter.OnCompleted(InvokeOnTaskCompleted, TuplePool.Rent((TPromise)this, awaiter, i));
                 }
             }
         }
 
         static void OnTaskCompletedCallback(object obj)
         {
-            using var tuple = (FieldTuple<TPromise, ETask.Awaiter>)obj;
-            tuple._1.OnTaskCompleted(tuple._2);
+            using var tuple = (FieldTuple<TPromise, ETask<T>.Awaiter, int>)obj;
+            tuple._1.OnTaskCompleted(in tuple._2, tuple._3);
         }
 
-        void OnTaskCompleted(in ETask.Awaiter awaiter)
-        {
-            try
-            {
-                awaiter.GetResult();
-            }
-            catch (Exception exception)
-            {
-                TrySetException(exception);
-                return;
-            }
-
-            if (CheckCompleted())
-                TrySetResult();
-        }
-
-        protected abstract bool CheckCompleted();
-
+        protected virtual void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index) { }
 
         protected override void BeforeReturn()
         {

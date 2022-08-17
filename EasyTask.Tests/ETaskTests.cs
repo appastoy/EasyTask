@@ -18,9 +18,9 @@ public class ETaskTests
         var exceptionTask = exceptionETask.AsTask();
         exceptionTask.IsFaulted.Should().BeTrue();
 
-#pragma warning disable CS8602 // null 가능 참조에 대한 역참조입니다.
+#pragma warning disable CS8602
         exceptionTask.Exception.InnerException.Should().Be(exceptionETask.Exception);
-#pragma warning restore CS8602 // null 가능 참조에 대한 역참조입니다.
+#pragma warning restore CS8602
 
         var value = 1;
         await ETask.Run(() => SetValueWithDelay(2, 100)).AsTask();
@@ -46,9 +46,9 @@ public class ETaskTests
         var exceptionTask = exceptionETask.AsValueTask();
         exceptionTask.IsFaulted.Should().BeTrue();
 
-#pragma warning disable CS8602 // null 가능 참조에 대한 역참조입니다.
+#pragma warning disable CS8602
         exceptionTask.AsTask().Exception.InnerException.Should().Be(exceptionETask.Exception);
-#pragma warning restore CS8602 // null 가능 참조에 대한 역참조입니다.
+#pragma warning restore CS8602
 
         var value = 1;
         await ETask.Run(() => SetValueWithDelay(2, 100)).AsValueTask();
@@ -117,7 +117,9 @@ public class ETaskTests
 
             var isThreadSame = Thread.CurrentThread.ManagedThreadId == threadId;
 
+#pragma warning disable CS8604
             await ETask.SwitchSynchronizationContext(currentContext);
+#pragma warning restore CS8604
 
             isThreadSame.Should().BeFalse();
             Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
@@ -176,7 +178,9 @@ public class ETaskTests
     {
         var context = SynchronizationContext.Current;
         var value = await ETask.FromResult(1);
+#pragma warning disable CS8604
         await ETask.SwitchSynchronizationContext(context);
+#pragma warning restore CS8604
         value.Should().Be(1);
     }
 

@@ -19,17 +19,40 @@ namespace EasyTask
             return WhenAnyPromise.Create(tasks.ToReadOnlyList()).Task;
         }
 
+        public static ETask<(T, int)>  WhenAny<T>(params ETask<T>[] tasks)
+            => WhenAnyPromise<T>.Create(tasks).Task;
+
+        public static ETask<(T, int)> WhenAny<T>(IEnumerable<ETask<T>> tasks)
+        {
+            if (tasks == null)
+                throw new ArgumentNullException(nameof(tasks));
+
+            return WhenAnyPromise<T>.Create(tasks.ToReadOnlyList()).Task;
+        }
+
         internal sealed class WhenAnyPromise : WhenPromise<WhenAnyPromise>
         {
-            int completedCount;
-
             protected override bool CheckCompleted()
-                => Interlocked.Increment(ref completedCount) == 1;
+                => Interlocked.Increment(ref countCompleted) == 1;
+        }
 
-            protected override void BeforeReturn()
+        internal sealed class WhenAnyPromise<T> : WhenPromise<WhenAnyPromise<T>, T, (T, int)>
+        {
+            protected override void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index)
             {
-                completedCount = 0;
-                base.BeforeReturn();
+                T result;
+                try
+                {
+                    result = awaiter.GetResult();
+                }
+                catch (Exception exception)
+                {
+                    TrySetException(exception);
+                    return;
+                }
+
+                if (Interlocked.Increment(ref countCompleted) == 1)
+                    TrySetResult((result, index));
             }
         }
     }

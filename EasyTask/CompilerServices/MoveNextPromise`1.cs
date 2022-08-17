@@ -1,16 +1,16 @@
-﻿using EasyTask.Promises;
+﻿using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 
 namespace EasyTask.CompilerServices
 {
 
-    internal interface IMoveNextPromise<T> : IPromise<T>, IMoveNextRunner
+    internal interface IMoveNextPromise<T> : IETaskCompletionSource<T>, IMoveNextRunner
     {
 
     }
 
-    internal sealed class MoveNextPromise<TStateMachine, T> : Promise<MoveNextPromise<TStateMachine, T>, T>, IMoveNextPromise<T>
+    internal sealed class MoveNextPromise<TStateMachine, T> : ETaskCompletionSourceGeneric<MoveNextPromise<TStateMachine, T>, T>, IMoveNextPromise<T>
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;

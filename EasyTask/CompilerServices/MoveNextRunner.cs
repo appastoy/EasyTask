@@ -1,4 +1,5 @@
 ﻿using EasyTask.Promises;
+using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -10,7 +11,7 @@ namespace EasyTask.CompilerServices
         void Return();
     }
 
-    internal sealed class MoveNextRunner<TStateMachine> : Promise<MoveNextRunner<TStateMachine>>, IMoveNextRunner
+    internal sealed class MoveNextRunner<TStateMachine> : ETaskCompletionSourceGeneric<MoveNextRunner<TStateMachine>>, IMoveNextRunner
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;

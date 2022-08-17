@@ -1,26 +1,23 @@
 ﻿using EasyTask.Helpers;
 using EasyTask.Pools;
-using EasyTask.Sources;
 using System;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 
-namespace EasyTask.Promises
+namespace EasyTask.Sources
 {
-    internal class Promise<TPromise> : PoolItem<TPromise>, IPromise
-        where TPromise : Promise<TPromise>, new()
+    public abstract class ETaskCompletionSourceBase<T> : PoolItem<T>
+        where T : ETaskCompletionSourceBase<T>, new()
     {
         short token;
 
-#pragma warning disable CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
+#pragma warning disable CS8618
         Action<object> continuation;
         object state;
-#pragma warning restore CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
+#pragma warning restore CS8618
 
         int completedCheck;
         object? error;
-
-        public ETask Task => new ETask(this, Token);
 
         public short Token => token;
 
@@ -30,10 +27,9 @@ namespace EasyTask.Promises
 
             unchecked { token += 1; }
 
-#pragma warning disable CS8625 // Null 리터럴을 null을 허용하지 않는 참조 형식으로 변환할 수 없습니다.
+#pragma warning disable CS8625
             continuation = null;
             state = null;
-#pragma warning restore CS8625 // Null 리터럴을 null을 허용하지 않는 참조 형식으로 변환할 수 없습니다.
 
             completedCheck = 0;
             error = null;
@@ -48,24 +44,12 @@ namespace EasyTask.Promises
             }
         }
 
-        public void GetResult(short token)
+        protected void GetResultInternal(short token)
         {
-            try
-            {
-                ValidateToken(token);
-                if (!IsCompletedInternal())
-                    throw new InvalidOperationException("Task is not completed.");
-                ThrowIfHasError();
-            }
-            finally
-            {
-                Return();
-            }
-        }
-
-        protected bool IsCompletedInternal()
-        {
-            return Volatile.Read(ref completedCheck) > 0;
+            ValidateToken(token);
+            if (Volatile.Read(ref completedCheck) == 0)
+                throw new InvalidOperationException("Task is not completed.");
+            ThrowIfHasError();
         }
 
         protected void ThrowIfHasError()
@@ -84,12 +68,6 @@ namespace EasyTask.Promises
             {
                 error = null;
             }
-        }
-
-        public void TrySetResult()
-        {
-            if (IsCompletedFirst())
-                InvokeContinuation();
         }
 
         public void TrySetException(Exception exception)
@@ -126,7 +104,17 @@ namespace EasyTask.Promises
         public void OnCompleted(Action<object> continuation, object state, short token)
         {
             ValidateToken(token);
-            SetContinuation(continuation, state);
+            this.state = state;
+            var oldContinuation = Interlocked.CompareExchange(ref this.continuation, continuation, null);
+            if (oldContinuation == null)
+                return;
+
+            if (oldContinuation != DelegateCache.InvokeNoop)
+                throw new InvalidOperationException("Task already awaited. You should not await more than twice.");
+
+            this.continuation = null;
+            this.state = null;
+            continuation.Invoke(state);
         }
 
         protected void ValidateToken(short token)
@@ -143,25 +131,11 @@ namespace EasyTask.Promises
                 var tempState = state;
                 continuation = null;
                 state = null;
+#pragma warning restore CS8625
                 tempContinuation.Invoke(tempState);
             }
         }
 
         protected bool IsCompletedFirst() => Interlocked.Increment(ref completedCheck) == 1;
-
-        void SetContinuation(Action<object> continuation, object state)
-        {
-            this.state = state;
-            var oldContinuation = Interlocked.CompareExchange(ref this.continuation, continuation, null);
-            if (oldContinuation == null)
-                return;
-
-            if (oldContinuation != DelegateCache.InvokeNoop)
-                throw new InvalidOperationException("Task already awaited. You should not await more than twice.");
-
-            this.continuation = null;
-            this.state = null;
-            continuation.Invoke(state);
-        }
     }
 }
