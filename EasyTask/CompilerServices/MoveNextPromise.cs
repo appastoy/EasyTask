@@ -3,6 +3,9 @@ using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable CS8618
+#pragma warning disable CS8601
+
 namespace EasyTask.CompilerServices
 {
 
@@ -23,18 +26,8 @@ namespace EasyTask.CompilerServices
             promise.stateMachine = stateMachine;
             return promise;
         }
-
-#pragma warning disable CS8618
         public MoveNextPromise() => InvokeMoveNext = MoveNext;
-#pragma warning restore CS8618
-
         void MoveNext() => stateMachine.MoveNext();
-
-        protected override void BeforeReturn()
-        {
-#pragma warning disable CS8601
-            stateMachine = default;
-#pragma warning restore CS8601
-        }
+        protected override void BeforeReturn() => stateMachine = default;
     }
 }

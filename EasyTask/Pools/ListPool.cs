@@ -2,6 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
+#pragma warning disable CS8618
+#pragma warning disable CS8625
+
 namespace EasyTask.Pools
 {
     internal static class ListPool
@@ -16,10 +19,7 @@ namespace EasyTask.Pools
 
     internal sealed class ListItem<T> : PoolItem<ListItem<T>>, IReadOnlyList<T>, IListPoolItem
     {
-#pragma warning disable CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
         T[] array;
-#pragma warning restore CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
-        
         int size;
 
         public T this[int index] => array[index];
@@ -66,9 +66,7 @@ namespace EasyTask.Pools
         protected override void BeforeReturn()
         {
             ArrayPool<T>.Shared.Return(array, true);
-#pragma warning disable CS8625 // Null 리터럴을 null을 허용하지 않는 참조 형식으로 변환할 수 없습니다.
             array = null;
-#pragma warning restore CS8625 // Null 리터럴을 null을 허용하지 않는 참조 형식으로 변환할 수 없습니다.
             size = 0;
         }
 

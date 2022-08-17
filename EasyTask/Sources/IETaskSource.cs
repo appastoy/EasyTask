@@ -17,13 +17,4 @@ namespace EasyTask
         void IValueTaskSource.OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
             => OnCompleted(continuation, state, token/*, ignore flag */);
     }
-
-    internal interface IETaskCompletionSource : IETaskSource
-    {
-        ETask Task { get; }
-        short Token { get; }
-        void TrySetException(Exception exception);
-        void TrySetCanceled(OperationCanceledException exception);
-        void TrySetResult();
-    }
 }

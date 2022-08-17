@@ -1,7 +1,9 @@
-﻿using EasyTask.Promises;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
+#pragma warning disable CS8600
+#pragma warning disable CS8603
 
 namespace EasyTask
 {
@@ -58,15 +60,11 @@ namespace EasyTask
         }
 
         static OperationCanceledException GetOperationCanceledException(AggregateException exception)
-#pragma warning disable CS8600 // null 리터럴 또는 가능한 null 값을 null을 허용하지 않는 형식으로 변환하는 중입니다.
-#pragma warning disable CS8603 // 가능한 null 참조 반환입니다.
             => exception.InnerException is OperationCanceledException oce ? oce :
                exception.InnerExceptions
                     .Select(e => e as OperationCanceledException)
                     .FirstOrDefault(e => e != null) ??
                     (OperationCanceledException)ETask.CanceledTask.Exception;
-#pragma warning restore CS8603 // 가능한 null 참조 반환입니다.
-#pragma warning restore CS8600 // null 리터럴 또는 가능한 null 값을 null을 허용하지 않는 형식으로 변환하는 중입니다.
 
         static readonly Action<Task, object> InvokeOnContinueWith = OnContinueWith;
 

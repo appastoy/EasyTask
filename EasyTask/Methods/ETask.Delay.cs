@@ -37,26 +37,24 @@ namespace EasyTask
                 return promise;
             }
 
+            readonly Action invokeTrySetResult;
+
             SynchronizationContext? sync;
             DateTime endTime;
             CancellationToken cancellationToken;
-            Action trySetResultAction;
 
-            public DelayPromise()
-            {
-                trySetResultAction = TrySetResult;
-            }
+            public DelayPromise() => invokeTrySetResult = TrySetResult;
 
             protected override void BeforeReturn()
             {
                 sync = null;
-                cancellationToken = CancellationToken.None;
+                cancellationToken = default;
             }
 
             void TrySetResultWithSync()
             {
                 if (sync != null)
-                    sync.Post(DelegateCache.InvokeAsSendOrPostCallback, trySetResultAction);
+                    sync.Post(DelegateCache.InvokeAsSendOrPostCallback, invokeTrySetResult);
                 else
                     TrySetResult();
             }

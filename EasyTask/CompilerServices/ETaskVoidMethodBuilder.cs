@@ -26,10 +26,7 @@ namespace EasyTask.CompilerServices
             }
         }
 
-        public void SetResult()
-        {
-            promise?.Return();
-        }
+        public void SetResult() => promise?.Return();
 
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
             ref TAwaiter awaiter,

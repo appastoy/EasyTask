@@ -36,14 +36,10 @@ namespace EasyTask
 
 
         internal ETask(IETaskSource<T> source, short token)
-
         {
             this.source = source;
             this.token = token;
-
-
             result = default;
-
         }
 
         internal ETask(T result)
@@ -53,10 +49,7 @@ namespace EasyTask
             this.result = result;
         }
 
-        public Awaiter GetAwaiter()
-        {
-            return new Awaiter(in this);
-        }
+        public Awaiter GetAwaiter() => new Awaiter(in this);
 
         public readonly struct Awaiter : ICriticalNotifyCompletion
         {
@@ -64,29 +57,18 @@ namespace EasyTask
 
             public bool IsCompleted => task.IsCompleted;
 
-            internal Awaiter(in ETask<T> task)
-            {
-                this.task = task;
-            }
+            internal Awaiter(in ETask<T> task) => this.task = task;
 
-            public T GetResult()
-            {
-                if (task.source is null)
-                    return task.result;
-                else
-                    return task.source.GetResult(task.token);
+            public T GetResult() => task.source is null ? task.result : task.source.GetResult(task.token);
 
-            }
-
-            public void OnCompleted(Action continuation)
-                => UnsafeOnCompleted(continuation);
+            public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 
             public void UnsafeOnCompleted(Action continuation)
             {
                 if (task.source is null)
                     continuation.Invoke();
                 else
-                    OnCompleted(DelegateCache.InvokeAsActionObjectNullable, continuation);
+                    OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
             }
             internal void OnCompleted(Action<object> continuation, object state)
             {
@@ -98,8 +80,3 @@ namespace EasyTask
         }
     }
 }
-
-#pragma warning restore CS8601
-#pragma warning restore CS8618
-#pragma warning restore CS8625
-#pragma warning restore CS8603

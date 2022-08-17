@@ -32,10 +32,7 @@ namespace EasyTask
             this.token = token;
         }
 
-        public Awaiter GetAwaiter()
-        {
-            return new Awaiter(in this);
-        }
+        public Awaiter GetAwaiter() => new Awaiter(in this);
 
         public readonly struct Awaiter : ICriticalNotifyCompletion
         {

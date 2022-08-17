@@ -8,5 +8,6 @@ namespace EasyTask
     [AsyncMethodBuilder(typeof(ETaskVoidMethodBuilder))]
     public readonly struct ETaskVoid
     {
+
     }
 }

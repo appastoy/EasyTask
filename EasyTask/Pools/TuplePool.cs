@@ -1,5 +1,8 @@
 ﻿using System;
 
+#pragma warning disable CS8601
+#pragma warning disable CS8618
+
 namespace EasyTask.Pools
 {
     internal static class TuplePool
@@ -31,9 +34,6 @@ namespace EasyTask.Pools
             return tuple;
         }
     }
-
-#pragma warning disable CS8601 // 가능한 null 참조 할당입니다.
-#pragma warning disable CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
 
     internal sealed class FieldTuple<T1, T2>
         : PoolItem<FieldTuple<T1, T2>>, IDisposable
@@ -79,7 +79,4 @@ namespace EasyTask.Pools
             _4 = default;
         }
     }
-
-#pragma warning restore CS8601 // 가능한 null 참조 할당입니다.
-#pragma warning restore CS8618 // 생성자를 종료할 때 null을 허용하지 않는 필드에 null이 아닌 값을 포함해야 합니다. null 허용으로 선언해 보세요.
 }

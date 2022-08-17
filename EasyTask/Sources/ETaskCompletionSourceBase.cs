@@ -4,18 +4,17 @@ using System;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 
+#pragma warning disable CS8618
+#pragma warning disable CS8625
+
 namespace EasyTask.Sources
 {
     public abstract class ETaskCompletionSourceBase<T> : PoolItem<T>
         where T : ETaskCompletionSourceBase<T>, new()
     {
         short token;
-
-#pragma warning disable CS8618
         Action<object> continuation;
         object state;
-#pragma warning restore CS8618
-
         int completedCheck;
         object? error;
 
@@ -27,10 +26,8 @@ namespace EasyTask.Sources
 
             unchecked { token += 1; }
 
-#pragma warning disable CS8625
             continuation = null;
             state = null;
-
             completedCheck = 0;
             error = null;
         }
@@ -131,7 +128,6 @@ namespace EasyTask.Sources
                 var tempState = state;
                 continuation = null;
                 state = null;
-#pragma warning restore CS8625
                 tempContinuation.Invoke(tempState);
             }
         }

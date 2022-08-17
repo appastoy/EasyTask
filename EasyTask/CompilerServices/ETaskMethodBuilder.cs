@@ -25,10 +25,7 @@ namespace EasyTask.CompilerServices
                 promise.TrySetException(exception);
         }
 
-        public void SetResult()
-        {
-            promise?.TrySetResult();
-        }
+        public void SetResult() => promise?.TrySetResult();
 
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
             ref TAwaiter awaiter,

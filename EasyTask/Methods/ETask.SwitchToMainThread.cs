@@ -4,7 +4,7 @@
     {
         public static SwitchSynchronizationContextAwaitable SwitchToMainThread()
         {
-            ValidateMainThreadSynchronizationContext();
+            EnsureMainThreadSynchronizationContext();
             return new SwitchSynchronizationContextAwaitable(mainThreadSynchronizationContext);
         }
     }

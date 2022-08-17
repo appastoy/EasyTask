@@ -74,7 +74,6 @@ namespace EasyTask.Promises
 
         protected abstract bool CheckCompleted();
 
-
         protected override void BeforeReturn()
         {
             if (tasks is IListPoolItem item)
