@@ -11,6 +11,8 @@ namespace EasyTask
 
         public ETask AsETask() => new ETask(source, token);
 
+        public static implicit operator ETask(ETask<T> task) => task.AsETask();
+
         public ValueTask<T> AsValueTask()
         {
             if (source is null || IsCompletedSuccessfully)

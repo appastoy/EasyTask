@@ -171,17 +171,24 @@ public class ETaskTests
         catch (OperationCanceledException)
         {
         }
-    }
 
-    [Fact]
-    public async Task FromResult()
-    {
-        var context = SynchronizationContext.Current;
-        var value = await ETask.FromResult(1);
-#pragma warning disable CS8604
-        await ETask.SwitchSynchronizationContext(context);
-#pragma warning restore CS8604
-        value.Should().Be(1);
+        try
+        {
+            await ETask.FromCanceled(new OperationCanceledException());
+            throw new XunitException("CanceledTask should throw OperationCanceledException.");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+
+        try
+        {
+            await ETask.FromCanceled(new CancellationToken(true));
+            throw new XunitException("CanceledTask should throw OperationCanceledException.");
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     [Fact]
