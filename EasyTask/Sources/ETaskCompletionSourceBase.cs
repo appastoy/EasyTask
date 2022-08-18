@@ -9,7 +9,12 @@ using System.Threading;
 
 namespace EasyTask.Sources
 {
-    public abstract class ETaskCompletionSourceBase<T> : PoolItem<T>
+    internal interface IConfigureAwaitable
+    {
+        void SetCaptureContext(bool captureContext);
+    }
+
+    public abstract class ETaskCompletionSourceBase<T> : PoolItem<T>, IConfigureAwaitable
         where T : ETaskCompletionSourceBase<T>, new()
     {
         short token;
@@ -17,10 +22,21 @@ namespace EasyTask.Sources
         object state;
         int completedCheck;
         object? error;
+        protected SynchronizationContext? context;
 
         public short Token => token;
 
-        protected override void BeforeRent()
+        protected override void BeforeRent() => context = SynchronizationContext.Current;
+        
+        void IConfigureAwaitable.SetCaptureContext(bool captureContext)
+        {
+            if (captureContext)
+                context = SynchronizationContext.Current;
+            else
+                context = null;
+        }
+
+        protected override void Reset()
         {
             ReportUnhandledError();
 
@@ -30,6 +46,7 @@ namespace EasyTask.Sources
             state = null;
             completedCheck = 0;
             error = null;
+            context = null;
         }
 
         void ReportUnhandledError()
@@ -111,7 +128,7 @@ namespace EasyTask.Sources
 
             this.continuation = null;
             this.state = null;
-            continuation.Invoke(state);
+            PostOrInvokeContinuation(continuation, state);
         }
 
         protected void ValidateToken(short token)
@@ -124,12 +141,20 @@ namespace EasyTask.Sources
         {
             if (continuation != null || Interlocked.CompareExchange(ref continuation, DelegateCache.InvokeNoop, null) != null)
             {
-                var tempContinuation = continuation;
-                var tempState = state;
+                Action<object> tempContinuation = continuation;
+                object tempState = state;
                 continuation = null;
                 state = null;
-                tempContinuation.Invoke(tempState);
+                PostOrInvokeContinuation(tempContinuation, tempState);
             }
+        }
+
+        private void PostOrInvokeContinuation(Action<object> continuation, object state)
+        {
+            if (context == null || SynchronizationContext.Current == context)
+                continuation.Invoke(state);
+            else
+                context.Post(DelegateCache.InvokeContinuationWithState, TuplePool.Rent(continuation, state));
         }
 
         protected bool IsCompletedFirst() => Interlocked.Increment(ref completedCheck) == 1;

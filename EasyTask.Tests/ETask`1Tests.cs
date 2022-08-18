@@ -108,14 +108,19 @@ public class ETask_T_Tests
             var threadId = Thread.CurrentThread.ManagedThreadId;
             var runThreadId = threadId;
 
-            runThreadId = await ETask.Run(() => Thread.CurrentThread.ManagedThreadId, false);
+            runThreadId = await ETask.Run(() =>
+                {
+                    Thread.Sleep(1);
+                    return Thread.CurrentThread.ManagedThreadId;
+                })
+                .ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
             Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
 
             await ETask.SwitchToMainThread();
 
-            await ETask.Run(Func2, false);
+            await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
             Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);

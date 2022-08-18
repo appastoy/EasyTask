@@ -59,8 +59,9 @@ namespace EasyTask.Promises
 
         protected virtual void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index) { }
 
-        protected override void BeforeReturn()
+        protected override void Reset()
         {
+            base.Reset();
             if (tasks is IListPoolItem item)
                 item.Return();
             tasks = null;

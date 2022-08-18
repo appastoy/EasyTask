@@ -9,7 +9,7 @@ namespace EasyTask
 {
     internal static class TaskExtensions
     {
-        public static ETask AsETask(this Task task, bool captureContext = true)
+        public static ETask AsETask(this Task task)
         {
             if (task == null)
                 throw new ArgumentNullException(nameof(task));
@@ -24,12 +24,7 @@ namespace EasyTask
                 return ETask.FromCanceled(GetOperationCanceledException(task.Exception));
 
             var ecs = ETaskCompletionSource.Rent();
-            task.ContinueWith(
-                InvokeOnContinueWith
-                , ecs
-                , captureContext ? 
-                    TaskScheduler.FromCurrentSynchronizationContext() : 
-                    TaskScheduler.Current);
+            task.ContinueWith(InvokeOnContinueWith, ecs, TaskScheduler.Current);
             
             return ecs.Task;
         }
@@ -49,12 +44,7 @@ namespace EasyTask
                 return ETask.FromCanceled<T>(GetOperationCanceledException(task.Exception));
 
             var ecs = ETaskCompletionSource<T>.Rent();
-            task.ContinueWith(
-                TaskDelegateCache<T>.InvokeOnContinueWith
-                , ecs
-                , captureContext ?
-                    TaskScheduler.FromCurrentSynchronizationContext() :
-                    TaskScheduler.Current);
+            task.ContinueWith(TaskDelegateCache<T>.InvokeOnContinueWith, ecs, TaskScheduler.Current);
 
             return ecs.Task;
         }

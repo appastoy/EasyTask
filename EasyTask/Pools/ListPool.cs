@@ -63,7 +63,7 @@ namespace EasyTask.Pools
             }
         }
 
-        protected override void BeforeReturn()
+        protected override void Reset()
         {
             ArrayPool<T>.Shared.Return(array, true);
             array = null;

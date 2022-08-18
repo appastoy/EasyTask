@@ -229,20 +229,27 @@ public class ETaskTests
             var threadId = Thread.CurrentThread.ManagedThreadId;
             var runThreadId = threadId;
 
-            await ETask.Run(() => runThreadId = Thread.CurrentThread.ManagedThreadId, false);
+            await ETask.Run(new Action(() =>
+                {
+                    Thread.Sleep(1);
+                    runThreadId = Thread.CurrentThread.ManagedThreadId;
+                }))
+                .ConfigureAwait(false);
 
+            // TODO: Error Check
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
+            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId); // <---- error
 
             await ETask.SwitchToMainThread();
 
-            await ETask.Run(Func2, false);
+            await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
             Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
 
             ETask Func2()
             {
+                Thread.Sleep(1);
                 runThreadId = Thread.CurrentThread.ManagedThreadId;
                 return ETask.CompletedTask;
             }

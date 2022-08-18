@@ -34,6 +34,10 @@ namespace EasyTask.Sources
             }
         }
 
-        protected override void BeforeReturn() => result = default;
+        protected override void Reset()
+        {
+            base.Reset();
+            result = default;
+        }
     }
 }

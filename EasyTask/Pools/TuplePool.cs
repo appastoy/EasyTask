@@ -41,7 +41,7 @@ namespace EasyTask.Pools
         public T1 _1;
         public T2 _2;
 
-        protected override void BeforeReturn()
+        protected override void Reset()
         {
             _1 = default;
             _2 = default;
@@ -55,7 +55,7 @@ namespace EasyTask.Pools
         public T2 _2;
         public T3 _3;
 
-        protected override void BeforeReturn()
+        protected override void Reset()
         {
             _1 = default;
             _2 = default;
@@ -71,7 +71,7 @@ namespace EasyTask.Pools
         public T3 _3;
         public T4 _4;
 
-        protected override void BeforeReturn()
+        protected override void Reset()
         {
             _1 = default;
             _2 = default;

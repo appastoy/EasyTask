@@ -1,5 +1,4 @@
-﻿using EasyTask.Promises;
-using EasyTask.Sources;
+﻿using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -28,6 +27,10 @@ namespace EasyTask.CompilerServices
         }
         public MoveNextPromise() => InvokeMoveNext = MoveNext;
         void MoveNext() => stateMachine.MoveNext();
-        protected override void BeforeReturn() => stateMachine = default;
+        protected override void Reset()
+        {
+            base.Reset();
+            stateMachine = default;
+        }
     }
 }

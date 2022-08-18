@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace EasyTask
 {
-    public readonly partial struct ETask
+    partial struct ETask
     {
         public static YieldAwaitable Yield() => default;
         public readonly struct YieldAwaitable
@@ -41,8 +41,6 @@ namespace EasyTask
                     return false;
                 }
             }
-
-            
         }
     }
 }

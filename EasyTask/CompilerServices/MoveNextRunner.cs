@@ -27,6 +27,10 @@ namespace EasyTask.CompilerServices
         }
         public MoveNextRunner() => InvokeMoveNext = MoveNext;
         void MoveNext() => stateMachine.MoveNext();
-        protected override void BeforeReturn() => stateMachine = default;
+        protected override void Reset()
+        {
+            base.Reset();
+            stateMachine = default;
+        }
     }
 }

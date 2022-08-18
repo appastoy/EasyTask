@@ -15,13 +15,18 @@ namespace EasyTask.Pools
         {
             using var _ = ScopeLocker.Lock();
 
+            TItem rentItem;
             if (poolRoot is null)
-                return new TItem();
-
-            var rentItem = poolRoot;
-            poolRoot = poolRoot.next;
-            rentItem.next = null;
-            poolSize--;
+            {
+                rentItem = new TItem();
+            }
+            else
+            {
+                rentItem = poolRoot;
+                poolRoot = poolRoot.next;
+                rentItem.next = null;
+                poolSize--;
+            }
             rentItem.BeforeRent();
             rentItem.isRented = true;
             return rentItem;
@@ -30,8 +35,6 @@ namespace EasyTask.Pools
         bool isRented;
         TItem? next;
 
-        protected virtual void BeforeRent() { }
-
         public void Return()
         {
             if (!isRented)
@@ -39,14 +42,15 @@ namespace EasyTask.Pools
 
             using var _ = ScopeLocker.Lock();
          
-            BeforeReturn();
+            Reset();
             isRented = false;
             next = poolRoot;
             poolRoot = (TItem)this;
             poolSize++;
         }
 
-        protected virtual void BeforeReturn() { }
+        protected virtual void BeforeRent() { }
+        protected virtual void Reset() { }
 
         public void Dispose() => Return();
 

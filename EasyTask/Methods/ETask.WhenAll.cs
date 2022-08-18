@@ -58,10 +58,10 @@ namespace EasyTask
                     TrySetResult(results);
             }
 
-            protected override void BeforeReturn()
+            protected override void Reset()
             {
+                base.Reset();
                 results = default;
-                base.BeforeReturn();
             }
         }
     }
