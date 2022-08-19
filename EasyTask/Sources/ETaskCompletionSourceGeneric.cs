@@ -1,7 +1,7 @@
 ﻿namespace EasyTask.Sources
 {
     public abstract class ETaskCompletionSourceGeneric<TSource>
-        : ETaskCompletionSourceBase<TSource>, IETaskSource
+        : ETaskCompletionSourceBase<TSource>, IETaskCompletionSource
         where TSource : ETaskCompletionSourceGeneric<TSource>, new()
     {
         public ETask Task => new ETask(this, Token);

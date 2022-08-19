@@ -13,11 +13,11 @@ namespace EasyTask
 {
     [StructLayout(LayoutKind.Auto)]
     [AsyncMethodBuilder(typeof(ETaskMethodBuilder<>))]
-    public readonly partial struct ETask<T>
+    public readonly partial struct ETask<TResult>
     {
-        readonly IETaskSource<T> source;
+        readonly IETaskSource<TResult> source;
         readonly short token;
-        readonly T result;
+        readonly TResult result;
 
         public ETaskStatus Status => source?.GetStatus(token) ?? ETaskStatus.Succeeded;
         public bool IsCompleted => Status != ETaskStatus.Pending;
@@ -26,7 +26,7 @@ namespace EasyTask
         public bool IsCanceled => Status == ETaskStatus.Canceled;
 
 
-        public T Result => source != null ? source.GetResult(token) : default;
+        public TResult Result => source != null ? source.GetResult(token) : default;
 
 
         public Exception? Exception => 
@@ -35,14 +35,14 @@ namespace EasyTask
             null;
 
 
-        internal ETask(IETaskSource<T> source, short token)
+        internal ETask(IETaskSource<TResult> source, short token)
         {
             this.source = source;
             this.token = token;
             result = default;
         }
 
-        internal ETask(T result)
+        internal ETask(TResult result)
         {
             source = default;
             token = default;
@@ -53,13 +53,13 @@ namespace EasyTask
 
         public readonly struct Awaiter : ICriticalNotifyCompletion
         {
-            readonly ETask<T> task;
+            readonly ETask<TResult> task;
 
             public bool IsCompleted => task.IsCompleted;
 
-            internal Awaiter(in ETask<T> task) => this.task = task;
+            internal Awaiter(in ETask<TResult> task) => this.task = task;
 
-            public T GetResult() => task.source is null ? task.result : task.source.GetResult(task.token);
+            public TResult GetResult() => task.source is null ? task.result : task.source.GetResult(task.token);
 
             public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
 

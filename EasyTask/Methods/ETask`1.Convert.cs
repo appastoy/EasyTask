@@ -7,35 +7,35 @@ using System.Threading.Tasks;
 
 namespace EasyTask
 {
-    partial struct ETask<T>
+    partial struct ETask<TResult>
     {
         static readonly Action<object> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
         public ETask AsETask() => new ETask(source, token);
 
-        public static implicit operator ETask(ETask<T> task) => task.AsETask();
+        public static implicit operator ETask(ETask<TResult> task) => task.AsETask();
 
-        public ValueTask<T> AsValueTask()
+        public ValueTask<TResult> AsValueTask()
         {
             if (source is null || IsCompletedSuccessfully)
                 return default;
 
-            return new ValueTask<T>(source, token);
+            return new ValueTask<TResult>(source, token);
         }
 
-        public Task<T> AsTask()
+        public Task<TResult> AsTask()
         {
             if (source is null || IsCompletedSuccessfully)
-                return Task.FromResult<T>(default);
+                return Task.FromResult<TResult>(default);
 
             if (IsCanceled)
-                return Task.FromCanceled<T>(Exception is OperationCanceledException oce ? 
+                return Task.FromCanceled<TResult>(Exception is OperationCanceledException oce ? 
                     oce.CancellationToken : new CancellationToken(true));
 
             if (IsFaulted)
-                return Task.FromException<T>(Exception);
+                return Task.FromException<TResult>(Exception);
 
-            var tcs = new TaskCompletionSource<T>();
+            var tcs = new TaskCompletionSource<TResult>();
             source.OnCompleted(InvokeTaskSetResultDelegate, TuplePool.Rent(tcs, this), token);
             
             return tcs.Task;
@@ -43,7 +43,7 @@ namespace EasyTask
 
         static void InvokeTaskSetResult(object obj)
         {
-            using var tuple = (FieldTuple<TaskCompletionSource<T>, ETask<T>>)obj;
+            using var tuple = (FieldTuple<TaskCompletionSource<TResult>, ETask<TResult>>)obj;
             try
             {
                 tuple._1.TrySetResult(tuple._2.Result);

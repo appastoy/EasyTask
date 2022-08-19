@@ -6,46 +6,32 @@ namespace EasyTask.Promises
 {
     internal interface IContinuePromise
     {
-        void InvokeContinueWith();
+        CancellationToken CancellationToken { get; }
+        void OnTrySetResult();
+        void TrySetCanceled(OperationCanceledException exception);
+        void TrySetException(Exception exception);
     }
 
     internal abstract class ContinuePromiseBase<T> : ETaskCompletionSourceGeneric<T>, IContinuePromise
         where T : ContinuePromiseBase<T>, new()
     {
-        CancellationToken cancellationToken;
-        protected ETask prevTask { get; private set; }
-
-        protected void Initialize(in ETask prevTask, in CancellationToken cancellationToken)
+        public static T Create(IETaskSource source, short token, in CancellationToken cancellationToken)
         {
-            this.prevTask = prevTask;
-            this.cancellationToken = cancellationToken;
+            var promise = Rent();
+            promise.CancellationToken = cancellationToken;
+            source.OnCompleted(ContinuePromiseDelegateCache.InvokeOnPrevTaskCompleted, promise, token);
+
+            return promise;
         }
 
-        void IContinuePromise.InvokeContinueWith()
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                TrySetCanceled(new OperationCanceledException(cancellationToken));
-                return;
-            }
+        public CancellationToken CancellationToken { get; private set; }
 
-            try
-            {
-                OnTrySetResult();
-            }
-            catch (Exception exception)
-            {
-                TrySetException(exception);
-            }
-        }
-
-        protected abstract void OnTrySetResult();
+        public abstract void OnTrySetResult();
 
         protected override void Reset()
         {
             base.Reset();
-            prevTask = default;
-            cancellationToken = default;
+            CancellationToken = default;
         }
     }
 
@@ -54,6 +40,23 @@ namespace EasyTask.Promises
         public static readonly Action<object> InvokeOnPrevTaskCompleted = OnPrevTaskCompleted;
 
         static void OnPrevTaskCompleted(object obj)
-            => ((IContinuePromise)obj).InvokeContinueWith();
+        {
+            var promise = (IContinuePromise)obj;
+            var cancelToken = promise.CancellationToken;
+            if (cancelToken.IsCancellationRequested)
+            {
+                promise.TrySetCanceled(new OperationCanceledException(cancelToken));
+                return;
+            }
+
+            try
+            {
+                promise.OnTrySetResult();
+            }
+            catch (Exception exception)
+            {
+                promise.TrySetException(exception);
+            }
+        }
     }
 }

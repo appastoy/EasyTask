@@ -5,23 +5,23 @@ using System.Collections.Generic;
 
 namespace EasyTask.Promises
 {
-    internal abstract class WhenPromise<TPromise, T, TResult> : ETaskCompletionSourceGeneric<TPromise, TResult>
-        where TPromise : WhenPromise<TPromise, T, TResult>, new()
+    internal abstract class WhenPromise<TPromise, TResult, TWhenResult> : ETaskCompletionSourceGeneric<TPromise, TWhenResult>
+        where TPromise : WhenPromise<TPromise, TResult, TWhenResult>, new()
     {
         static readonly Action<object> InvokeOnTaskCompleted = OnTaskCompletedCallback;
 
-        IReadOnlyList<ETask<T>>? tasks;
+        IReadOnlyList<ETask<TResult>>? tasks;
         protected int taskCount => tasks?.Count ?? 0;
         protected int countCompleted;
 
-        public static TPromise Create(IReadOnlyList<ETask<T>> tasks)
+        public static TPromise Create(IReadOnlyList<ETask<TResult>> tasks)
         {
             var promise = Rent();
             promise.Initialize(tasks);
             return promise;
         }
 
-        void Initialize(IReadOnlyList<ETask<T>> tasks)
+        void Initialize(IReadOnlyList<ETask<TResult>> tasks)
         {
             this.tasks = tasks;
             countCompleted = 0;
@@ -29,7 +29,7 @@ namespace EasyTask.Promises
             for (int i = 0; i < tasks.Count; i++)
             {
                 var task = tasks[i];
-                ETask<T>.Awaiter awaiter;
+                ETask<TResult>.Awaiter awaiter;
                 try
                 {
                     awaiter = task.GetAwaiter();
@@ -53,11 +53,11 @@ namespace EasyTask.Promises
 
         static void OnTaskCompletedCallback(object obj)
         {
-            using var tuple = (FieldTuple<TPromise, ETask<T>.Awaiter, int>)obj;
+            using var tuple = (FieldTuple<TPromise, ETask<TResult>.Awaiter, int>)obj;
             tuple._1.OnTaskCompleted(in tuple._2, tuple._3);
         }
 
-        protected virtual void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index) { }
+        protected virtual void OnTaskCompleted(in ETask<TResult>.Awaiter awaiter, int index) { }
 
         protected override void Reset()
         {

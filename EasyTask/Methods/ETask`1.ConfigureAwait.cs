@@ -2,7 +2,7 @@
 
 namespace EasyTask
 {
-    partial struct ETask<T>
+    partial struct ETask<TResult>
     {
         public ConfigureAwaitable ConfigureAwait(bool captureContext)
         {
@@ -15,9 +15,9 @@ namespace EasyTask
 
         public readonly struct ConfigureAwaitable
         {
-            readonly ETask<T> task;
+            readonly ETask<TResult> task;
 
-            public ConfigureAwaitable(in ETask<T> task) => this.task = task;
+            public ConfigureAwaitable(in ETask<TResult> task) => this.task = task;
 
             public Awaiter GetAwaiter() => task.GetAwaiter();
         }

@@ -12,8 +12,8 @@ namespace EasyTask
     {
         public static readonly ETask CompletedTask = new ETask();
 
-        readonly IETaskSource source;
-        readonly short token;
+        internal readonly IETaskSource source;
+        internal readonly short token;
 
         public ETaskStatus Status => source?.GetStatus(token) ?? ETaskStatus.Succeeded;
         public bool IsCompleted => Status != ETaskStatus.Pending;

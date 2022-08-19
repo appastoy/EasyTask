@@ -7,9 +7,9 @@ using System.Threading;
 
 namespace EasyTask
 {
-    partial struct ETask
+    partial struct ETask<TResult>
     {
-        public ETask ContinueWith(Action<ETask> continuation, CancellationToken cancellationToken = default)
+        public ETask ContinueWith(Action<ETask<TResult>> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
@@ -19,18 +19,18 @@ namespace EasyTask
                 try
                 {
                     continuation.Invoke(this);
-                    return CompletedTask;
+                    return ETask.CompletedTask;
                 }
                 catch (Exception exception)
                 {
-                    return FromException(exception);
+                    return ETask.FromException(exception);
                 }
             }
 
             return ContinuePromise.Create(in this, continuation, in cancellationToken).Task;
         }
 
-        public ETask<TResult> ContinueWith<TResult>(Func<ETask, TResult> continuation, CancellationToken cancellationToken = default)
+        public ETask<TNewResult> ContinueWith<TNewResult>(Func<ETask<TResult>, TNewResult> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
@@ -39,18 +39,18 @@ namespace EasyTask
             {
                 try
                 {
-                    return FromResult(continuation.Invoke(this));
+                    return ETask.FromResult(continuation.Invoke(this));
                 }
                 catch (Exception exception)
                 {
-                    return FromException<TResult>(exception);
+                    return ETask.FromException<TNewResult>(exception);
                 }
             }
 
-            return ContinuePromise<TResult>.Create(in this, continuation, in cancellationToken).Task;
+            return ContinuePromise<TNewResult>.Create(in this, continuation, in cancellationToken).Task;
         }
 
-        public ETask ContinueWith(Action<ETask, object> continuation, object state, CancellationToken cancellationToken = default)
+        public ETask ContinueWith(Action<ETask<TResult>, object> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
@@ -60,18 +60,18 @@ namespace EasyTask
                 try
                 {
                     continuation.Invoke(this, state);
-                    return CompletedTask;
+                    return ETask.CompletedTask;
                 }
                 catch (Exception exception)
                 {
-                    return FromException(exception);
+                    return ETask.FromException(exception);
                 }
             }
 
             return ContinueWithStatePromise.Create(in this, continuation, state, in cancellationToken).Task;
         }
 
-        public ETask<TResult> ContinueWith<TResult>(Func<ETask, object, TResult> continuation, object state, CancellationToken cancellationToken = default)
+        public ETask<TNewResult> ContinueWith<TNewResult>(Func<ETask<TResult>, object, TNewResult> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
                 throw new ArgumentNullException(nameof(continuation));
@@ -80,20 +80,20 @@ namespace EasyTask
             {
                 try
                 {
-                    return FromResult(continuation.Invoke(this, state));
+                    return ETask.FromResult(continuation.Invoke(this, state));
                 }
                 catch (Exception exception)
                 {
-                    return FromException<TResult>(exception);
+                    return ETask.FromException<TNewResult>(exception);
                 }
             }
 
-            return ContinueWithStatePromise<TResult>.Create(in this, continuation, state, in cancellationToken).Task;
+            return ContinueWithStatePromise<TNewResult>.Create(in this, continuation, state, in cancellationToken).Task;
         }
 
         internal sealed class ContinuePromise : ContinuePromiseBase<ContinuePromise>
         {
-            public static ContinuePromise Create(in ETask prevTask, Action<ETask> continuation, in CancellationToken cancellationToken)
+            public static ContinuePromise Create(in ETask<TResult> prevTask, Action<ETask<TResult>> continuation, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
                 promise.prevTask = prevTask;
@@ -102,8 +102,8 @@ namespace EasyTask
                 return promise;
             }
 
-            ETask prevTask;
-            Action<ETask> continuation;
+            ETask<TResult> prevTask;
+            Action<ETask<TResult>> continuation;
 
             public override void OnTrySetResult()
             {
@@ -121,7 +121,7 @@ namespace EasyTask
 
         internal sealed class ContinueWithStatePromise : ContinuePromiseBase<ContinueWithStatePromise>
         {
-            public static ContinueWithStatePromise Create(in ETask prevTask, Action<ETask, object> continuation, object state, in CancellationToken cancellationToken)
+            public static ContinueWithStatePromise Create(in ETask<TResult> prevTask, Action<ETask<TResult>, object> continuation, object state, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
                 promise.prevTask = prevTask;
@@ -131,8 +131,8 @@ namespace EasyTask
                 return promise;
             }
 
-            ETask prevTask;
-            Action<ETask, object> continuation;
+            ETask<TResult> prevTask;
+            Action<ETask<TResult>, object> continuation;
             object state;
 
             public override void OnTrySetResult()
@@ -150,11 +150,11 @@ namespace EasyTask
             }
         }
 
-        internal sealed class ContinuePromise<TResult> 
-            : ContinuePromiseBase<ContinuePromise<TResult>, TResult>
+        internal sealed class ContinuePromise<TNewResult> 
+            : ContinuePromiseBase<ContinuePromise<TNewResult>, TNewResult>
         {
 
-            public static ContinuePromise<TResult> Create(in ETask prevTask, Func<ETask, TResult> continuation, in CancellationToken cancellationToken)
+            public static ContinuePromise<TNewResult> Create(in ETask<TResult> prevTask, Func<ETask<TResult>, TNewResult> continuation, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
                 promise.prevTask = prevTask;
@@ -163,9 +163,8 @@ namespace EasyTask
                 return promise;
             }
 
-            ETask prevTask;
-            Func<ETask, TResult> continuation;
-
+            ETask<TResult> prevTask;
+            Func<ETask<TResult>, TNewResult> continuation;
 
             public override void OnTrySetResult()
             {
@@ -183,21 +182,21 @@ namespace EasyTask
 
         
 
-        internal sealed class ContinueWithStatePromise<TResult> 
-            : ContinuePromiseBase<ContinueWithStatePromise<TResult>, TResult>
+        internal sealed class ContinueWithStatePromise<TNewResult> 
+            : ContinuePromiseBase<ContinueWithStatePromise<TNewResult>, TNewResult>
         {
-            public static ContinueWithStatePromise<TResult> Create(in ETask prevTask, Func<ETask, object, TResult> continuation, object state, in CancellationToken cancellationToken)
+            public static ContinueWithStatePromise<TNewResult> Create(in ETask<TResult> prevTask, Func<ETask<TResult>, object, TNewResult> continuation, object state, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
                 promise.prevTask = prevTask;
                 promise.continuation = continuation;
                 promise.state = state;
-
+                
                 return promise;
             }
 
-            ETask prevTask;
-            Func<ETask, object, TResult> continuation;
+            ETask<TResult> prevTask;
+            Func<ETask<TResult>, object, TNewResult> continuation;
             object state;
 
             public override void OnTrySetResult()

@@ -4,7 +4,7 @@
 namespace EasyTask.Sources
 {
     public abstract class ETaskCompletionSourceGeneric<TSource, T>
-        : ETaskCompletionSourceBase<TSource>, IETaskSource<T>
+        : ETaskCompletionSourceBase<TSource>, IETaskCompletionSource<T>
         where TSource : ETaskCompletionSourceGeneric<TSource, T>, new()
     {
 
