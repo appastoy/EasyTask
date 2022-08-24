@@ -26,7 +26,7 @@ namespace EasyTask
         public bool IsCanceled => Status == ETaskStatus.Canceled;
 
 
-        public TResult Result => source != null ? source.GetResult(token) : default;
+        public TResult Result => source != null ? source.GetResult(token) : result;
 
 
         public Exception? Exception => 

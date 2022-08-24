@@ -3,7 +3,7 @@ using Xunit.Sdk;
 
 namespace EasyTask.Tests;
 
-public class ETaskTests
+public class ETask_Tests
 {
     [Fact]
     public async Task AsTask()
@@ -67,9 +67,9 @@ public class ETaskTests
         AsyncContext.Run(Func);
         static async Task Func()
         {
-            int threadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Environment.CurrentManagedThreadId;
             await ETask.Yield();
-            threadId.Should().Be(Thread.CurrentThread.ManagedThreadId);
+            threadId.Should().Be(Environment.CurrentManagedThreadId);
         }
     }
 
@@ -79,9 +79,9 @@ public class ETaskTests
         AsyncContext.Run(Func);
         static async Task Func()
         {
-            int threadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Environment.CurrentManagedThreadId;
             await ETask.Delay(1);
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
         }
     }
 
@@ -92,11 +92,11 @@ public class ETaskTests
         static async Task Func()
         {
             ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
-            int threadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
 
-            var isThreadSame = Thread.CurrentThread.ManagedThreadId == threadId;
+            var isThreadSame = Environment.CurrentManagedThreadId == threadId;
 
             await ETask.SwitchToMainThread();
 
@@ -111,18 +111,18 @@ public class ETaskTests
         static async Task Func()
         {
             var currentContext = SynchronizationContext.Current;
-            int threadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
 
-            var isThreadSame = Thread.CurrentThread.ManagedThreadId == threadId;
+            var isThreadSame = Environment.CurrentManagedThreadId == threadId;
 
 #pragma warning disable CS8604
             await ETask.SwitchSynchronizationContext(currentContext);
 #pragma warning restore CS8604
 
             isThreadSame.Should().BeFalse();
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
         }
     }
 
@@ -130,11 +130,12 @@ public class ETaskTests
     public void SwitchToMainThread()
     {
         AsyncContext.Run(Func);
-        static async Task Func()
+        async Task Func()
         {
             var mainThreadContext = SynchronizationContext.Current;
+            mainThreadContext.Should().NotBeNull();
             ETask.SetMainThreadSynchronizationContext(mainThreadContext);
-            int threadId = Thread.CurrentThread.ManagedThreadId;
+            int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
 
@@ -143,7 +144,7 @@ public class ETaskTests
             await ETask.SwitchToMainThread();
 
             isContextSame.Should().BeFalse();
-            threadId.Should().Be(Thread.CurrentThread.ManagedThreadId);
+            threadId.Should().Be(Environment.CurrentManagedThreadId);
         }
     }
 
@@ -198,59 +199,58 @@ public class ETaskTests
         static async Task Func()
         {
             ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
-            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
             
-            await ETask.Run(() => runThreadId = Thread.CurrentThread.ManagedThreadId);
+            await ETask.Run(() => runThreadId = Environment.CurrentManagedThreadId);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
 
             await ETask.Run(Func2);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
 
             ETask Func2()
             {
-                runThreadId = Thread.CurrentThread.ManagedThreadId;
+                runThreadId = Environment.CurrentManagedThreadId;
                 return ETask.CompletedTask;
             }
         }
     }
 
     [Fact]
-    public void Run_Without_CaptureContext()
+    public void ConfigureAwait()
     {
         AsyncContext.Run(Func);
         static async Task Func()
         {
             ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
-            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
             await ETask.Run(new Action(() =>
                 {
                     Thread.Sleep(1);
-                    runThreadId = Thread.CurrentThread.ManagedThreadId;
+                    runThreadId = Environment.CurrentManagedThreadId;
                 }))
                 .ConfigureAwait(false);
 
-            // TODO: Error Check
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId); // <---- error
+            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
 
             await ETask.SwitchToMainThread();
 
             await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
+            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
 
             ETask Func2()
             {
                 Thread.Sleep(1);
-                runThreadId = Thread.CurrentThread.ManagedThreadId;
+                runThreadId = Environment.CurrentManagedThreadId;
                 return ETask.CompletedTask;
             }
         }
@@ -318,5 +318,90 @@ public class ETaskTests
                 value = v;
             }
         }
+    }
+
+    [Fact]
+    public void ContinueWith()
+    {
+        AsyncContext.Run(async () =>
+        {
+            var list = new List<string>();
+            var threadId = Environment.CurrentManagedThreadId;
+            var threadIdInContinueWith = 0;
+
+            {
+                await Action().ContinueWith(task =>
+                {
+                    list.Add("b");
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                });
+                threadIdInContinueWith.Should().Be(threadId);
+                list.Should().BeEquivalentTo(new[] { "a", "b" });
+            }
+
+            {
+                list.Clear();
+                await Action().ContinueWith((task, state) =>
+                {
+                    list.Add((string)state);
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                }, "c");
+                threadIdInContinueWith.Should().Be(threadId);
+                list.Should().BeEquivalentTo(new[] { "a", "c" });
+            }
+
+            {
+                list.Clear();
+                var result = await Action().ContinueWith(task =>
+                {
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                    return list[0];
+                });
+                threadIdInContinueWith.Should().Be(threadId);
+                result.Should().Be("a");
+            }
+
+            {
+                list.Clear();
+                var result = await Action().ContinueWith((task, state) =>
+                {
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                    return list[0] + (string)state;
+                }, "d");
+                threadIdInContinueWith.Should().Be(threadId);
+                result.Should().Be("ad");
+            }
+
+            {
+                bool isFault = false;
+                await Error().ContinueWith(task => isFault = task.IsFaulted);
+                isFault.Should().BeTrue();
+            }
+
+            {
+                bool isCanceled = false;
+                await Cancel().ContinueWith(task => isCanceled = task.IsCanceled);
+                isCanceled.Should().BeTrue();
+            }
+
+            ETask Action()
+            {
+                list.Add("a");
+                return ETask.CompletedTask;
+            }
+
+            async ETask Error()
+            {
+                await ETask.Yield();
+                throw new Exception();
+            }
+
+            async ETask Cancel()
+            {
+                await ETask.Yield();
+                var token = new CancellationToken(true);
+                token.ThrowIfCancellationRequested();
+            }
+        });
     }
 }

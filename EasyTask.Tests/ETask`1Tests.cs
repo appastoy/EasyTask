@@ -11,7 +11,7 @@ public class ETask_T_Tests
         var value = await ETask.Run(() => GetValueWithDelay(2, 100)).AsTask();
         value.Should().Be(2);
 
-        async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+        static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
         {
             await ETask.Delay(delayMilliSeconds);
             return v;
@@ -24,7 +24,7 @@ public class ETask_T_Tests
         var value = await ETask.Run(() => GetValueWithDelay(2, 100)).AsValueTask();
         value.Should().Be(2);
 
-        async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+        static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
         {
             await ETask.Delay(delayMilliSeconds);
             return v;
@@ -77,58 +77,58 @@ public class ETask_T_Tests
         static async Task Func()
         {
             ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
-            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
-            runThreadId = await ETask.Run(() => Thread.CurrentThread.ManagedThreadId);
+            runThreadId = await ETask.Run(() => Environment.CurrentManagedThreadId);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
 
             runThreadId = await ETask.Run(Func2);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().Be(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(threadId);
 
-            async ETask<int> Func2()
+            static async ETask<int> Func2()
             {
                 await ETask.Yield();
-                return Thread.CurrentThread.ManagedThreadId;
+                return Environment.CurrentManagedThreadId;
             }
         }
     }
 
     [Fact]
-    public void Run_Without_CaptureContext()
+    public void ConfigureAwait()
     {
         AsyncContext.Run(Func);
         static async Task Func()
         {
             ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
-            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
             runThreadId = await ETask.Run(() =>
                 {
                     Thread.Sleep(1);
-                    return Thread.CurrentThread.ManagedThreadId;
+                    return Environment.CurrentManagedThreadId;
                 })
                 .ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
+            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
 
             await ETask.SwitchToMainThread();
 
             await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
-            Thread.CurrentThread.ManagedThreadId.Should().NotBe(threadId);
+            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
 
-            async ETask<int> Func2()
+            static async ETask<int> Func2()
             {
                 await ETask.Yield();
-                return Thread.CurrentThread.ManagedThreadId;
+                return Environment.CurrentManagedThreadId;
             }
         }
     }
@@ -157,7 +157,7 @@ public class ETask_T_Tests
             value.Should().Be(2);
             index.Should().Be(1);
 
-            async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+            static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
             {
                 await ETask.Delay(delayMilliSeconds);
                 return v;
@@ -187,11 +187,93 @@ public class ETask_T_Tests
             });
             values.Should().BeEquivalentTo(new[] {4,3,2,1});
 
-            async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+            static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
             {
                 await ETask.Delay(delayMilliSeconds);
                 return v;
             }
         }
+    }
+
+    [Fact]
+    public void ContinueWith()
+    {
+        AsyncContext.Run(async () =>
+        {
+            var testString = string.Empty;
+            var threadId = Environment.CurrentManagedThreadId;
+            var threadIdInContinueWith = 0;
+
+            {
+                await Func().ContinueWith(task =>
+                {
+                    testString = task.Result + "b";
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                });
+                threadIdInContinueWith.Should().Be(threadId);
+                testString.Should().Be("ab");
+            }
+
+            {
+                await Func().ContinueWith((task, state) =>
+                {
+                    testString = task.Result + (string)state;
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                }, "c");
+                threadIdInContinueWith.Should().Be(threadId);
+                testString.Should().Be("ac");
+            }
+
+            {
+                var result = await Func().ContinueWith(task =>
+                {
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                    return task.Result + "d";
+                });
+                threadIdInContinueWith.Should().Be(threadId);
+                result.Should().Be("ad");
+            }
+
+            {
+                var result = await Func().ContinueWith((task, state) =>
+                {
+                    threadIdInContinueWith = Environment.CurrentManagedThreadId;
+                    return task.Result + (string)state;
+                }, "f");
+                threadIdInContinueWith.Should().Be(threadId);
+                result.Should().Be("af");
+            }
+
+            {
+                bool isFault = false;
+                await Error().ContinueWith(task => isFault = task.IsFaulted);
+                isFault.Should().BeTrue();
+            }
+
+            {
+                bool isCanceled = false;
+                await Cancel().ContinueWith(task => isCanceled = task.IsCanceled);
+                isCanceled.Should().BeTrue();
+            }
+
+            ETask<string> Func()
+            {
+                return ETask.FromResult("a");
+            }
+
+            async ETask<string> Error()
+            {
+                await ETask.Yield();
+                throw new Exception();
+            }
+
+            async ETask<string> Cancel()
+            {
+                await ETask.Yield();
+                var token = new CancellationToken(true);
+                token.ThrowIfCancellationRequested();
+                return string.Empty;
+            }
+        });
     }
 }
