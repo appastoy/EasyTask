@@ -1,4 +1,3 @@
-using Nito.AsyncEx;
 using Xunit.Sdk;
 
 namespace EasyTask.Tests;
@@ -23,7 +22,7 @@ public class ETask_Tests
 #pragma warning restore CS8602
 
         var value = 1;
-        await ETask.Run(() => SetValueWithDelay(2, 100)).AsTask();
+        await ETask.Run(() => SetValueWithDelay(2, 20)).AsTask();
         value.Should().Be(2);
 
         async ETask SetValueWithDelay(int v, int delayMilliSeconds)
@@ -51,7 +50,7 @@ public class ETask_Tests
 #pragma warning restore CS8602
 
         var value = 1;
-        await ETask.Run(() => SetValueWithDelay(2, 100)).AsValueTask();
+        await ETask.Run(() => SetValueWithDelay(2, 20)).AsValueTask();
         value.Should().Be(2);
 
         async ETask SetValueWithDelay(int v, int delayMilliSeconds)
@@ -64,8 +63,8 @@ public class ETask_Tests
     [Fact]
     public void Yield()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             int threadId = Environment.CurrentManagedThreadId;
             await ETask.Yield();
@@ -76,8 +75,8 @@ public class ETask_Tests
     [Fact]
     public void Delay()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             int threadId = Environment.CurrentManagedThreadId;
             await ETask.Delay(1);
@@ -88,10 +87,9 @@ public class ETask_Tests
     [Fact]
     public void SwitchToThreadPool()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
             int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
@@ -107,19 +105,17 @@ public class ETask_Tests
     [Fact]
     public void SwitchSynchronizationContext()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            var currentContext = SynchronizationContext.Current;
+            SynchronizationContext? currentContext = SynchronizationContext.Current ?? throw new ArgumentNullException("SynchronizationContext.Current");
             int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
 
             var isThreadSame = Environment.CurrentManagedThreadId == threadId;
 
-#pragma warning disable CS8604
             await ETask.SwitchSynchronizationContext(currentContext);
-#pragma warning restore CS8604
 
             isThreadSame.Should().BeFalse();
             Environment.CurrentManagedThreadId.Should().Be(threadId);
@@ -129,17 +125,15 @@ public class ETask_Tests
     [Fact]
     public void SwitchToMainThread()
     {
-        AsyncContext.Run(Func);
-        async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            var mainThreadContext = SynchronizationContext.Current;
-            mainThreadContext.Should().NotBeNull();
-            ETask.SetMainThreadSynchronizationContext(mainThreadContext);
+            var context = SynchronizationContext.Current;
             int threadId = Environment.CurrentManagedThreadId;
 
             await ETask.SwitchToThreadPool();
 
-            var isContextSame = SynchronizationContext.Current == mainThreadContext;
+            var isContextSame = SynchronizationContext.Current == context;
 
             await ETask.SwitchToMainThread();
 
@@ -195,10 +189,9 @@ public class ETask_Tests
     [Fact]
     public void Run()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
             var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
             
@@ -221,12 +214,110 @@ public class ETask_Tests
     }
 
     [Fact]
+    public void RunSynchronously()
+    {
+        {
+            int actionInvoked = 0;
+            ETask.RunSynchronously(() =>
+            {
+                SynchronizationContext.Current!.Post(_ => actionInvoked = 2, null);
+                actionInvoked = 1;
+            });
+            actionInvoked.Should().Be(2);
+        }
+
+        {
+            var func = ETask.RunSynchronously<Func<string>>(() =>
+            {
+                string value = "a";
+                SynchronizationContext.Current!.Post(_ => value = "b", null);
+
+                return () => value;
+            });
+            func().Should().Be("b");
+        }
+
+        {
+            int etaskInvoked = 0;
+            ETask.RunSynchronously(async () =>
+            {
+                etaskInvoked = 1;
+                await ETask.Yield();
+                etaskInvoked = 3;
+            });
+            etaskInvoked.Should().Be(3);
+        }
+
+        {
+            var value = ETask.RunSynchronously(async () =>
+            {
+                string value = "a";
+                await ETask.Yield();
+                value = "c";
+                return value;
+            });
+            value.Should().Be("c");
+        }
+    }
+
+    [Fact]
+    public void RunTaskSynchronously()
+    {
+        {
+            int etaskInvoked = 0;
+            ETask.RunTaskSynchronously(async () =>
+            {
+                etaskInvoked = 1;
+                await Task.Yield();
+                etaskInvoked = 3;
+            });
+            etaskInvoked.Should().Be(3);
+        }
+
+        {
+            var value = ETask.RunTaskSynchronously(async () =>
+            {
+                string value = "a";
+                await Task.Yield();
+                value = "c";
+                return value;
+            });
+            value.Should().Be("c");
+        }
+    }
+
+    [Fact]
+    public void RunValueTaskSynchronously()
+    {
+        {
+            int etaskInvoked = 0;
+            ETask.RunValueTaskSynchronously(async () =>
+            {
+                etaskInvoked = 1;
+                await Task.Yield();
+                etaskInvoked = 3;
+            });
+            etaskInvoked.Should().Be(3);
+        }
+
+        {
+            var value = ETask.RunValueTaskSynchronously(async () =>
+            {
+                string value = "a";
+                await Task.Yield();
+                value = "c";
+                return value;
+            });
+            value.Should().Be("c");
+        }
+    }
+
+    [Fact]
     public void ConfigureAwait()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
             var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
@@ -259,8 +350,8 @@ public class ETask_Tests
     [Fact]
     public void WhenAny()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             var value = 0;
             await ETask.WhenAny(
@@ -291,8 +382,8 @@ public class ETask_Tests
     [Fact]
     public void WhenAll()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             var value = 0;
             await ETask.WhenAll(
@@ -323,7 +414,7 @@ public class ETask_Tests
     [Fact]
     public void ContinueWith()
     {
-        AsyncContext.Run(async () =>
+        ETask.RunSynchronously(async () =>
         {
             var list = new List<string>();
             var threadId = Environment.CurrentManagedThreadId;
@@ -403,5 +494,24 @@ public class ETask_Tests
                 token.ThrowIfCancellationRequested();
             }
         });
+    }
+
+    [Fact]
+    public void Forget()
+    {
+        new Action(() => ETask.RunSynchronously(FuncETask))
+            .Should().Throw<Exception>()
+            .And.Message.Should().Be("abc");
+        async ETask FuncETask()
+        {
+            FuncETaskForget().Forget();
+            while (true)
+                await ETask.Yield();
+        }
+        async ETask FuncETaskForget()
+        {
+            await ETask.Delay(20).ConfigureAwait(false);
+            throw new Exception("abc");
+        }
     }
 }

@@ -7,6 +7,13 @@ namespace EasyTask.Pools
 {
     internal static class TuplePool
     {
+        public static FieldTuple<T1> Rent<T1>(T1 _1)
+        {
+            var tuple = FieldTuple<T1>.Rent();
+            tuple._1 = _1;
+            return tuple;
+        }
+
         public static FieldTuple<T1, T2> Rent<T1, T2>(T1 _1, T2 _2)
         {
             var tuple = FieldTuple<T1, T2>.Rent();
@@ -32,6 +39,17 @@ namespace EasyTask.Pools
             tuple._3 = _3;
             tuple._4 = _4;
             return tuple;
+        }
+    }
+
+    internal sealed class FieldTuple<T1>
+        : PoolItem<FieldTuple<T1>>, IDisposable
+    {
+        public T1 _1;
+
+        protected override void Reset()
+        {
+            _1 = default;
         }
     }
 

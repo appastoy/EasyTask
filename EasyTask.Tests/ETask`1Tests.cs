@@ -1,4 +1,3 @@
-using Nito.AsyncEx;
 using Xunit.Sdk;
 
 namespace EasyTask.Tests;
@@ -8,7 +7,7 @@ public class ETask_T_Tests
     [Fact]
     public async Task AsTask()
     {
-        var value = await ETask.Run(() => GetValueWithDelay(2, 100)).AsTask();
+        var value = await ETask.Run(() => GetValueWithDelay(2, 20)).AsTask();
         value.Should().Be(2);
 
         static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
@@ -21,7 +20,7 @@ public class ETask_T_Tests
     [Fact]
     public async Task AsValueTask()
     {
-        var value = await ETask.Run(() => GetValueWithDelay(2, 100)).AsValueTask();
+        var value = await ETask.Run(() => GetValueWithDelay(2, 20)).AsValueTask();
         value.Should().Be(2);
 
         static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
@@ -32,15 +31,10 @@ public class ETask_T_Tests
     }
 
     [Fact]
-    public async Task FromResult()
+    public void FromResult()
     {
-        var context = SynchronizationContext.Current;
-        var value = await ETask.FromResult(1);
-
-#pragma warning disable CS8604
-        await ETask.SwitchSynchronizationContext(context);
-#pragma warning restore CS8604
-
+        var value = 0;
+        value = ETask.RunSynchronously(async () => await ETask.FromResult(1));
         value.Should().Be(1);
     }
 
@@ -73,10 +67,9 @@ public class ETask_T_Tests
     [Fact]
     public void Run()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
             var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
@@ -101,10 +94,9 @@ public class ETask_T_Tests
     [Fact]
     public void ConfigureAwait()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
-            ETask.SetMainThreadSynchronizationContext(SynchronizationContext.Current);
             var threadId = Environment.CurrentManagedThreadId;
             var runThreadId = threadId;
 
@@ -136,8 +128,8 @@ public class ETask_T_Tests
     [Fact]
     public void WhenAny()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             var (value, index) = await ETask.WhenAny(
                 GetValueWithDelay(1, 1000),
@@ -168,8 +160,8 @@ public class ETask_T_Tests
     [Fact]
     public void WhenAll()
     {
-        AsyncContext.Run(Func);
-        static async Task Func()
+        ETask.RunSynchronously(Func);
+        static async ETask Func()
         {
             var values = await ETask.WhenAll(
                 GetValueWithDelay(1, 1),
@@ -198,7 +190,7 @@ public class ETask_T_Tests
     [Fact]
     public void ContinueWith()
     {
-        AsyncContext.Run(async () =>
+        ETask.RunSynchronously(async () =>
         {
             var testString = string.Empty;
             var threadId = Environment.CurrentManagedThreadId;
@@ -275,5 +267,24 @@ public class ETask_T_Tests
                 return string.Empty;
             }
         });
+    }
+
+    [Fact]
+    public void Forget()
+    {
+        new Action(() => ETask.RunSynchronously(FuncETask))
+            .Should().Throw<Exception>()
+            .And.Message.Should().Be("abc");
+        async ETask FuncETask()
+        {
+            FuncETaskResultForget().Forget();
+            while (true)
+                await ETask.Yield();
+        }
+        async ETask<int> FuncETaskResultForget()
+        {
+            await ETask.Delay(20).ConfigureAwait(false);
+            throw new Exception("abc");
+        }
     }
 }

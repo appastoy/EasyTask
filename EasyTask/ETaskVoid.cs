@@ -8,6 +8,7 @@ namespace EasyTask
     [AsyncMethodBuilder(typeof(ETaskVoidMethodBuilder))]
     public readonly struct ETaskVoid
     {
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Forget() { }
     }
 }
