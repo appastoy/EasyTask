@@ -3,7 +3,7 @@
 namespace EasyTask
 {
     public sealed class ETaskCompletionSource 
-        : ETaskCompletionSourceGeneric<ETaskCompletionSource> 
+        : ETaskCompletionSourceBase<ETaskCompletionSource> 
     {
 
     }

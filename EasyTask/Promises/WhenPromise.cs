@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace EasyTask.Promises
 {
-    internal abstract class WhenPromise<TPromise> : ETaskCompletionSourceGeneric<TPromise>
+    internal abstract class WhenPromise<TPromise> : ETaskCompletionSourceBase<TPromise>
         where TPromise : WhenPromise<TPromise>, new()
     {
         static readonly Action<object> InvokeOnTaskCompleted = OnTaskCompletedCallback;

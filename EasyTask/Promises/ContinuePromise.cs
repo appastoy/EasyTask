@@ -12,7 +12,7 @@ namespace EasyTask.Promises
         void TrySetException(Exception exception);
     }
 
-    internal abstract class ContinuePromiseBase<T> : ETaskCompletionSourceGeneric<T>, IContinuePromise
+    internal abstract class ContinuePromiseBase<T> : ETaskCompletionSourceBase<T>, IContinuePromise
         where T : ContinuePromiseBase<T>, new()
     {
         public static T Create(IETaskSource source, short token, in CancellationToken cancellationToken)

@@ -16,7 +16,7 @@ namespace EasyTask
             return Delay(new TimeSpan(milliseconds * TimeSpan.TicksPerMillisecond), cancellationToken);
         }
 
-        internal sealed class DelayPromise : ETaskCompletionSourceGeneric<DelayPromise>
+        internal sealed class DelayPromise : ETaskCompletionSourceBase<DelayPromise>
         {
             static readonly Action<DelayPromise> InvokeDelayCheck = DelayCheck;
             static readonly Action<DelayPromise> InvokeDelayCheckWithCancel = DelayCheckWithCancel;

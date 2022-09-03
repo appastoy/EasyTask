@@ -13,7 +13,7 @@ namespace EasyTask.CompilerServices
 
     }
 
-    internal sealed class MoveNextPromise<TStateMachine, T> : ETaskCompletionSourceGeneric<MoveNextPromise<TStateMachine, T>, T>, IMoveNextPromise<T>
+    internal sealed class MoveNextPromise<TStateMachine, T> : ETaskCompletionSourceBase<MoveNextPromise<TStateMachine, T>, T>, IMoveNextPromise<T>
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;

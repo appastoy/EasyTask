@@ -13,7 +13,7 @@ namespace EasyTask.CompilerServices
         void Return();
     }
 
-    internal sealed class MoveNextRunner<TStateMachine> : ETaskCompletionSourceGeneric<MoveNextRunner<TStateMachine>>, IMoveNextRunner
+    internal sealed class MoveNextRunner<TStateMachine> : ETaskCompletionSourceBase<MoveNextRunner<TStateMachine>>, IMoveNextRunner
         where TStateMachine : IAsyncStateMachine
     {
         TStateMachine stateMachine;

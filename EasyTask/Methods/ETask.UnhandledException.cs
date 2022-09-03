@@ -7,24 +7,42 @@ namespace EasyTask
     partial struct ETask
     {
         static readonly SendOrPostCallback InvokeOnPublish = OnPublish;
-        
+        static readonly SendOrPostCallback InvokeOnThrow = OnThrow;
+
         public static event Action<Exception>? UnhandledExceptionHandler;
 
         internal static void PublishUnhandledException(ExceptionDispatchInfo exceptionDispatchInfo)
         {
-            EnsureMainThreadSynchronizationContext();
-            mainThreadSynchronizationContext?.Post(InvokeOnPublish, exceptionDispatchInfo);
+            if (mainThreadContext != null && mainThreadContext != SynchronizationContext.Current)
+                mainThreadContext.Post(InvokeOnPublish, exceptionDispatchInfo);
+            else
+                OnPublish(exceptionDispatchInfo);
+        }
+
+        internal static void PublishUnhandledException(Exception exception)
+        {
+            if (mainThreadContext != null && mainThreadContext != SynchronizationContext.Current)
+                mainThreadContext.Post(InvokeOnThrow, exception);
+            else
+                OnThrow(exception);
         }
 
         static void OnPublish(object obj)
         {
-            if (obj is ExceptionDispatchInfo info)
-            {
-                if (UnhandledExceptionHandler != null)
-                    UnhandledExceptionHandler.Invoke(info.SourceException);
-                else
-                    info.Throw();
-            }
+            var info = (ExceptionDispatchInfo)obj;
+            if (UnhandledExceptionHandler != null)
+                UnhandledExceptionHandler.Invoke(info.SourceException);
+            else
+                info.Throw();
+        }
+
+        static void OnThrow(object obj)
+        {
+            var exception = (Exception)obj;
+            if (UnhandledExceptionHandler != null)
+                UnhandledExceptionHandler.Invoke(exception);
+            else
+                throw exception;
         }
     }
 }

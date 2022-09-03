@@ -51,7 +51,12 @@ namespace EasyTask
             }
 
             public void OnCompleted(Action continuation)
-                => UnsafeOnCompleted(continuation);
+            {
+                if (task.source is null)
+                    continuation.Invoke();
+                else
+                    OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
+            }
 
             public void UnsafeOnCompleted(Action continuation)
             {

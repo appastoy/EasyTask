@@ -7,40 +7,41 @@ namespace EasyTask
 {
     partial struct ETask
     {
-        public static SwitchSynchronizationContextAwaitable SwitchSynchronizationContext(SynchronizationContext synchronizationContext)
+        public static SwitchSynchronizationContextAwaitable SwitchSynchronizationContext(SynchronizationContext context)
         {
-            if (synchronizationContext == null)
-                throw new ArgumentNullException(nameof(synchronizationContext));
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
 
-            return new SwitchSynchronizationContextAwaitable(synchronizationContext);
+            return new SwitchSynchronizationContextAwaitable(context);
         }
 
         public readonly struct SwitchSynchronizationContextAwaitable
         {
-            readonly SynchronizationContext synchronizationContext;
+            readonly SynchronizationContext context;
 
-            internal SwitchSynchronizationContextAwaitable(SynchronizationContext synchronizationContext)
-                => this.synchronizationContext = synchronizationContext;
+            internal SwitchSynchronizationContextAwaitable(SynchronizationContext context)
+                => this.context = context;
 
-            public Awaiter GetAwaiter() => new Awaiter(synchronizationContext);
+            public Awaiter GetAwaiter() => new (context);
 
             public readonly struct Awaiter : ICriticalNotifyCompletion
             {
-                readonly SynchronizationContext synchronizationContext;
+                readonly SynchronizationContext context;
 
-                internal Awaiter(SynchronizationContext synchronizationContext)
-                    => this.synchronizationContext = synchronizationContext;
+                internal Awaiter(SynchronizationContext context)
+                    => this.context = context;
 
                 public bool IsCompleted
-                    => synchronizationContext != null &&
-                       SynchronizationContext.Current == synchronizationContext;
+                    => context != null &&
+                       context == SynchronizationContext.Current;
 
                 public void GetResult() { }
 
-                public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
+                public void OnCompleted(Action continuation)
+                    => context.Post(DelegateCache.InvokeAsSendOrPostCallback, continuation);
 
                 public void UnsafeOnCompleted(Action continuation)
-                    => synchronizationContext.Post(DelegateCache.InvokeAsSendOrPostCallback, continuation);
+                    => context.Post(DelegateCache.InvokeAsSendOrPostCallback, continuation);
             }
         }
     }

@@ -4,7 +4,7 @@ using System.Threading;
 namespace EasyTask.Promises
 {
     internal abstract class ContinuePromiseBase<TPromise, TResult> 
-        : ETaskCompletionSourceGeneric<TPromise, TResult>, IContinuePromise
+        : ETaskCompletionSourceBase<TPromise, TResult>, IContinuePromise
         where TPromise : ContinuePromiseBase<TPromise, TResult>, new()
     {
         public static TPromise Create(IETaskSource source, short token, in CancellationToken cancellationToken)

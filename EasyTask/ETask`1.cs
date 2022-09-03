@@ -61,8 +61,13 @@ namespace EasyTask
 
             public TResult GetResult() => task.source is null ? task.result : task.source.GetResult(task.token);
 
-            public void OnCompleted(Action continuation) => UnsafeOnCompleted(continuation);
-
+            public void OnCompleted(Action continuation)
+            {
+                if (task.source is null)
+                    continuation.Invoke();
+                else
+                    OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
+            }
             public void UnsafeOnCompleted(Action continuation)
             {
                 if (task.source is null)

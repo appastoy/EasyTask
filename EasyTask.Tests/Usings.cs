@@ -1,3 +1,4 @@
 global using Xunit;
 global using FluentAssertions;
-global using EasyTask;
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
