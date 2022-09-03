@@ -43,7 +43,7 @@ namespace EasyTask
             protected override void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index)
             {
                 if (results == null)
-                    results = new T[taskCount];
+                    results = new T[TaskCount];
                 try
                 {
                     results[index] = awaiter.GetResult();
@@ -54,7 +54,7 @@ namespace EasyTask
                     return;
                 }
 
-                if (Interlocked.Increment(ref countCompleted) == taskCount)
+                if (Interlocked.Increment(ref countCompleted) == TaskCount)
                     TrySetResult(results);
             }
 

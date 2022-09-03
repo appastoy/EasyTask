@@ -11,7 +11,7 @@ namespace EasyTask.Promises
         static readonly Action<object> InvokeOnTaskCompleted = OnTaskCompletedCallback;
 
         IReadOnlyList<ETask<TResult>>? tasks;
-        protected int taskCount => tasks?.Count ?? 0;
+        protected int TaskCount => tasks?.Count ?? 0;
         protected int countCompleted;
 
         public static TPromise Create(IReadOnlyList<ETask<TResult>> tasks)
