@@ -19,14 +19,20 @@ namespace EasyTask.CompilerServices
         TStateMachine stateMachine;
         public Action InvokeMoveNext { get; }
 
-        public static MoveNextPromise<TStateMachine, T> Create(ref TStateMachine stateMachine)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Create(ref TStateMachine stateMachine, out IMoveNextPromise<T> outPromise)
         {
             var promise = Rent();
+            outPromise = promise;
             promise.stateMachine = stateMachine;
-            return promise;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MoveNextPromise() => InvokeMoveNext = MoveNext;
+
         void MoveNext() => stateMachine.MoveNext();
+                
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             base.Reset();

@@ -1,5 +1,7 @@
 ﻿using EasyTask.Pools;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace EasyTask
 {
@@ -26,6 +28,8 @@ namespace EasyTask
             ProcessOnCompleted(in tuple._1);
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void ProcessOnCompleted(in Awaiter awaiter)
         {
             try

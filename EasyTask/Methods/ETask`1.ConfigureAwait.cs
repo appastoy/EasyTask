@@ -1,4 +1,6 @@
 ﻿using EasyTask.Sources;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace EasyTask
 {
@@ -17,8 +19,12 @@ namespace EasyTask
         {
             readonly ETask<TResult> task;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ConfigureAwaitable(in ETask<TResult> task) => this.task = task;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Awaiter GetAwaiter() => task.GetAwaiter();
         }
     }

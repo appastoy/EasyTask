@@ -1,5 +1,6 @@
 ﻿using EasyTask.Pools;
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,13 +12,16 @@ namespace EasyTask
     {
         static readonly Action<object> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
-        public ETask AsETask() => new ETask(source, token);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ETask AsETask() => new (source, token);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator ETask(ETask<TResult> task) => task.AsETask();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueTask<TResult> AsValueTask()
         {
-            if (source is null || IsCompletedSuccessfully)
+            if (source == null || IsCompletedSuccessfully)
                 return default;
 
             return new ValueTask<TResult>(source, token);

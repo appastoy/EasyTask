@@ -24,12 +24,15 @@ namespace EasyTask
                 return ETask.FromCanceled(GetOperationCanceledException(task.Exception));
 
             var ecs = ETaskCompletionSource.Rent();
-            task.ContinueWith(InvokeOnContinueWith, ecs, TaskScheduler.Current);
+            task.ContinueWith(
+                InvokeOnContinueWith, 
+                ecs,
+                TaskScheduler.FromCurrentSynchronizationContext());
             
             return ecs.Task;
         }
 
-        public static ETask<T> AsETask<T>(this Task<T> task, bool captureContext = true)
+        public static ETask<T> AsETask<T>(this Task<T> task)
         {
             if (task == null)
                 throw new ArgumentNullException(nameof(task));
@@ -44,7 +47,10 @@ namespace EasyTask
                 return ETask.FromCanceled<T>(GetOperationCanceledException(task.Exception));
 
             var ecs = ETaskCompletionSource<T>.Rent();
-            task.ContinueWith(TaskDelegateCache<T>.InvokeOnContinueWith, ecs, TaskScheduler.Current);
+            task.ContinueWith(
+                TaskDelegateCache<T>.InvokeOnContinueWith, 
+                ecs,
+                TaskScheduler.FromCurrentSynchronizationContext());
 
             return ecs.Task;
         }

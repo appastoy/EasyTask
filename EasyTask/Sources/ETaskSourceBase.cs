@@ -1,6 +1,8 @@
 ﻿using EasyTask.Helpers;
 using EasyTask.Pools;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 
@@ -24,10 +26,17 @@ namespace EasyTask.Sources
         object? error;
         protected SynchronizationContext? context;
 
-        public short Token => token;
+        public short Token
+        {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => token;
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void BeforeRent() => context = SynchronizationContext.Current;
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IConfigureAwaitable.SetCaptureContext(bool captureContext)
         {
             if (captureContext)
@@ -50,24 +59,27 @@ namespace EasyTask.Sources
                 state = null;
                 error = null;
                 context = null;
-                Volatile.Write(ref completedCheck, 0);
+                completedCheck = 0;
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ReportUnhandledError()
         {
             if (error is ExceptionHolder holder)
                 ETask.PublishUnhandledException(holder.GetException());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void GetResultInternal(short token)
         {
             ValidateToken(token);
-            if (Volatile.Read(ref completedCheck) == 0)
-                throw new InvalidOperationException("Task is not completed.");
+            while (completedCheck == 0)
+                Thread.Yield();
             ThrowIfHasError();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ThrowIfHasError()
         {
             if (error is null)
@@ -86,6 +98,8 @@ namespace EasyTask.Sources
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TrySetException(Exception exception)
         {
             if (IsCompletedFirst())
@@ -96,6 +110,8 @@ namespace EasyTask.Sources
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TrySetCanceled(OperationCanceledException operationCanceledException)
         {
             if (IsCompletedFirst())
@@ -105,15 +121,18 @@ namespace EasyTask.Sources
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ETaskStatus GetStatus(short token)
         {
             ValidateToken(token);
-            return Volatile.Read(ref completedCheck) == 0 ? ETaskStatus.Pending :
+            return completedCheck == 0 ? ETaskStatus.Pending :
                    error == null ? ETaskStatus.Succeeded :
                    error.GetType() == typeof(OperationCanceledException) ? ETaskStatus.Canceled :
                    ETaskStatus.Faulted;
         }
 
+        [DebuggerHidden]
         public void OnCompleted(Action<object> continuation, object state, short token)
         {
             ValidateToken(token);
@@ -130,12 +149,14 @@ namespace EasyTask.Sources
             PostOrInvokeContinuation(continuation, state);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void ValidateToken(short token)
         {
             if (this.token != token)
                 throw new InvalidOperationException("Invalid token");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void InvokeContinuation()
         {
             if (continuation != null || Interlocked.CompareExchange(ref continuation, DelegateCache.InvokeNoop, null) != null)
@@ -148,6 +169,7 @@ namespace EasyTask.Sources
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PostOrInvokeContinuation(Action<object> continuation, object state)
         {
             if (context == null || 
@@ -157,6 +179,7 @@ namespace EasyTask.Sources
                 context.Post(DelegateCache.InvokeContinuationWithState, TuplePool.Rent(continuation, state));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool IsCompletedFirst() => Interlocked.Increment(ref completedCheck) == 1;
     }
 }

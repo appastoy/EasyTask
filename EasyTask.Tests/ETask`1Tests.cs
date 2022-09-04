@@ -163,21 +163,26 @@ public class ETask_T_Tests
         ETask.RunSynchronously(Func);
         static async ETask Func()
         {
-            var values = await ETask.WhenAll(
+            var task1 = ETask.WhenAll(
                 GetValueWithDelay(1, 1),
                 GetValueWithDelay(2, 20),
                 GetValueWithDelay(3, 40),
                 GetValueWithDelay(4, 60));
-            values.Should().BeEquivalentTo(new[] { 1, 2, 3, 4 });
+            
 
-            values = await ETask.WhenAll(new List<ETask<int>>
+            var task2 = ETask.WhenAll(new List<ETask<int>>
             {
                 GetValueWithDelay(4, 1),
                 GetValueWithDelay(3, 20),
                 GetValueWithDelay(2, 40),
                 GetValueWithDelay(1, 60)
             });
-            values.Should().BeEquivalentTo(new[] {4,3,2,1});
+
+            var task1Result = await task1;
+            var task2Result = await task2;
+
+            task1Result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4 });
+            task2Result.Should().BeEquivalentTo(new[] { 4, 3, 2, 1 });
 
             static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
             {

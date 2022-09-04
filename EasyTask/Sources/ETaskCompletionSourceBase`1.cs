@@ -1,4 +1,8 @@
-﻿#pragma warning disable CS8618
+﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+#pragma warning disable CS8618
 #pragma warning disable CS8601
 
 namespace EasyTask.Sources
@@ -10,12 +14,21 @@ namespace EasyTask.Sources
 
         T result;
 
-        public ETask<T> Task => new ETask<T>(this, Token);
+        public ETask<T> Task
+        {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(this, Token);
+        }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetResult(short token)
         {
             try
             {
+                if (Token != token)
+                    throw new InvalidOperationException("You can only call one of these methods once. (ETask<T>.Result or ETask<T>.Awaiter.GetResult() or await ETask<T>)");
                 GetResultInternal(token);
                 return result;
             }
@@ -25,6 +38,8 @@ namespace EasyTask.Sources
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void TrySetResult(T result)
         {
             if (IsCompletedFirst())
@@ -34,6 +49,8 @@ namespace EasyTask.Sources
             }
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             base.Reset();

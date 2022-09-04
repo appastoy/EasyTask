@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -10,48 +11,71 @@ namespace EasyTask.CompilerServices
         IMoveNextPromise? promise;
         Exception? exception;
 
-        public ETask Task =>
-            exception != null ? ETask.FromException(exception) :
-            promise != null ? promise.Task :
-            ETask.CompletedTask;
+        public ETask Task
+        {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => exception != null ? ETask.FromException(exception) :
+                   promise != null ?   promise.Task :
+                                       ETask.CompletedTask;
+        }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETaskMethodBuilder Create() => default;
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetException(Exception exception)
         {
-            if (promise is null)
+            if (promise == null)
                 this.exception = exception;
             else
                 promise.TrySetException(exception);
         }
 
-        public void SetResult() => promise?.TrySetResult();
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetResult()
+        {
+            promise?.TrySetResult();
+        }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AwaitOnCompleted<TAwaiter, TStateMachine>(
             ref TAwaiter awaiter,
             ref TStateMachine stateMachine)
             where TAwaiter : INotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            promise ??= MoveNextPromise<TStateMachine>.Create(ref stateMachine);
+            if (promise == null)
+                MoveNextPromise<TStateMachine>.Create(ref stateMachine, out promise);
             awaiter.OnCompleted(promise.InvokeMoveNext);
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AwaitUnsafeOnCompleted<TAwaiter, TStateMachine>(
             ref TAwaiter awaiter, 
             ref TStateMachine stateMachine)
             where TAwaiter : ICriticalNotifyCompletion
             where TStateMachine : IAsyncStateMachine
         {
-            promise ??= MoveNextPromise<TStateMachine>.Create(ref stateMachine);
+            if (promise == null)
+                MoveNextPromise<TStateMachine>.Create(ref stateMachine, out promise);
             awaiter.UnsafeOnCompleted(promise.InvokeMoveNext);
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetStateMachine(IAsyncStateMachine _)
         {
             
         }
 
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start<TStateMachine>(ref TStateMachine stateMachine) 
             where TStateMachine : IAsyncStateMachine
             => stateMachine.MoveNext();

@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable CS8618
 #pragma warning disable CS8625
@@ -9,6 +10,7 @@ namespace EasyTask.Pools
 {
     internal static class ListPool
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListItem<T> Rent<T>(int capacity) => ListItem<T>.Rent(capacity);
     }
 
@@ -22,10 +24,19 @@ namespace EasyTask.Pools
         T[] array;
         int size;
 
-        public T this[int index] => array[index];
+        public T this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => array[index];
+        }
 
-        public int Count => array.Length;
+        public int Count
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => array.Length;
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ListItem<T> Rent(int capacity)
         {
             var list = Rent();
@@ -34,6 +45,7 @@ namespace EasyTask.Pools
             return list;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CopyFrom(ICollection<T> collection)
         {
             EnsureSize(collection.Count, true);
@@ -41,12 +53,14 @@ namespace EasyTask.Pools
             size = collection.Count;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
             EnsureSize(size + 1);
             array[size++] = item;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureSize(int needSize, bool skipCopy = false)
         {
             if (needSize > array.Length)
@@ -63,6 +77,7 @@ namespace EasyTask.Pools
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             ArrayPool<T>.Shared.Return(array, true);
@@ -70,11 +85,13 @@ namespace EasyTask.Pools
             size = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<T> GetEnumerator()
         {
             return (array as IEnumerable<T>).GetEnumerator();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

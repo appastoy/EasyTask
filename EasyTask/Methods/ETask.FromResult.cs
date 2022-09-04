@@ -1,8 +1,12 @@
-﻿namespace EasyTask
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
+namespace EasyTask
 {
     partial struct ETask
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<T> FromResult<T>(T result)
-            => new ETask<T>(result);
+            => new (result);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 #pragma warning disable CS8601
 #pragma warning disable CS8618
@@ -7,6 +8,7 @@ namespace EasyTask.Pools
 {
     internal static class TuplePool
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FieldTuple<T1> Rent<T1>(T1 _1)
         {
             var tuple = FieldTuple<T1>.Rent();
@@ -14,6 +16,7 @@ namespace EasyTask.Pools
             return tuple;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FieldTuple<T1, T2> Rent<T1, T2>(T1 _1, T2 _2)
         {
             var tuple = FieldTuple<T1, T2>.Rent();
@@ -22,6 +25,7 @@ namespace EasyTask.Pools
             return tuple;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FieldTuple<T1, T2, T3> Rent<T1, T2, T3>(T1 _1, T2 _2, T3 _3)
         {
             var tuple = FieldTuple<T1, T2, T3>.Rent();
@@ -31,6 +35,7 @@ namespace EasyTask.Pools
             return tuple;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FieldTuple<T1, T2, T3, T4> Rent<T1, T2, T3, T4>(T1 _1, T2 _2, T3 _3, T4 _4)
         {
             var tuple = FieldTuple<T1, T2, T3, T4>.Rent();
@@ -47,6 +52,7 @@ namespace EasyTask.Pools
     {
         public T1 _1;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             _1 = default;
@@ -59,6 +65,7 @@ namespace EasyTask.Pools
         public T1 _1;
         public T2 _2;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             _1 = default;
@@ -73,6 +80,7 @@ namespace EasyTask.Pools
         public T2 _2;
         public T3 _3;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             _1 = default;
@@ -89,6 +97,7 @@ namespace EasyTask.Pools
         public T3 _3;
         public T4 _4;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             _1 = default;

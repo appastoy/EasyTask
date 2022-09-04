@@ -1,5 +1,7 @@
 ﻿using EasyTask.Promises;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 #pragma warning disable CS8618
@@ -9,6 +11,13 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Set up a delegate that runs continuously after the task completes.
+        /// </summary>
+        /// <param name="continuation">delegate</param>
+        /// <param name="cancellationToken">cancal token</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask ContinueWith(Action<ETask> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -30,6 +39,14 @@ namespace EasyTask
             return ContinuePromise.Create(in this, continuation, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set up a delegate with result that runs continuously after the task completes.
+        /// </summary>
+        /// <typeparam name="TResult">result type</typeparam>
+        /// <param name="continuation">delegate</param>
+        /// <param name="cancellationToken">cancel token</param>
+        /// <returns>Task with result</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask<TResult> ContinueWith<TResult>(Func<ETask, TResult> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -50,6 +67,14 @@ namespace EasyTask
             return ContinuePromise<TResult>.Create(in this, continuation, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set up a delegate with state that runs continuously after the task completes.
+        /// </summary>
+        /// <param name="continuation">delegate</param>
+        /// <param name="state">delegate parameter</param>
+        /// <param name="cancellationToken">cancel token</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask ContinueWith(Action<ETask, object> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -71,6 +96,14 @@ namespace EasyTask
             return ContinueWithStatePromise.Create(in this, continuation, state, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set up a delegate with state with result that runs continuously after the task completes.
+        /// </summary>
+        /// <param name="continuation">delegate</param>
+        /// <param name="state">delegate parameter</param>
+        /// <param name="cancellationToken">cancel token</param>
+        /// <returns>Task with result</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask<TResult> ContinueWith<TResult>(Func<ETask, object, TResult> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -93,6 +126,8 @@ namespace EasyTask
 
         internal sealed class ContinuePromise : ContinuePromiseBase<ContinuePromise>
         {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static ContinuePromise Create(in ETask prevTask, Action<ETask> continuation, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
@@ -105,12 +140,15 @@ namespace EasyTask
             ETask prevTask;
             Action<ETask> continuation;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
                 continuation.Invoke(prevTask);
                 TrySetResult();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void Reset()
             {
                 base.Reset();
@@ -121,6 +159,8 @@ namespace EasyTask
 
         internal sealed class ContinueWithStatePromise : ContinuePromiseBase<ContinueWithStatePromise>
         {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static ContinueWithStatePromise Create(in ETask prevTask, Action<ETask, object> continuation, object state, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
@@ -135,12 +175,15 @@ namespace EasyTask
             Action<ETask, object> continuation;
             object state;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
                 continuation.Invoke(prevTask, state);
                 TrySetResult();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void Reset()
             {
                 base.Reset();
@@ -153,7 +196,8 @@ namespace EasyTask
         internal sealed class ContinuePromise<TResult> 
             : ContinuePromiseBase<ContinuePromise<TResult>, TResult>
         {
-
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static ContinuePromise<TResult> Create(in ETask prevTask, Func<ETask, TResult> continuation, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
@@ -166,13 +210,15 @@ namespace EasyTask
             ETask prevTask;
             Func<ETask, TResult> continuation;
 
-
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
                 var result = continuation.Invoke(prevTask);
                 TrySetResult(result);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void Reset()
             {
                 base.Reset();
@@ -186,6 +232,8 @@ namespace EasyTask
         internal sealed class ContinueWithStatePromise<TResult> 
             : ContinuePromiseBase<ContinueWithStatePromise<TResult>, TResult>
         {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static ContinueWithStatePromise<TResult> Create(in ETask prevTask, Func<ETask, object, TResult> continuation, object state, in CancellationToken cancellationToken)
             {
                 var promise = Create(prevTask.source, prevTask.token, in cancellationToken);
@@ -200,12 +248,15 @@ namespace EasyTask
             Func<ETask, object, TResult> continuation;
             object state;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
                 var result = continuation.Invoke(prevTask, state);
                 TrySetResult(result);
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void Reset()
             {
                 base.Reset();

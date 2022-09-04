@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EasyTask.Pools
 {
-
     public class PoolItem<TItem> : IDisposable
         where TItem : PoolItem<TItem>, new()
     {
         static TItem? poolRoot;
-        static int poolSize;
         static int @lock;
+
+        public static int RentCount { get; private set; }
+        public static int FreeCount { get; private set; }
+        public static int TotalCount => RentCount + FreeCount;
 
         public static TItem Rent()
         {
@@ -25,10 +28,11 @@ namespace EasyTask.Pools
                 rentItem = poolRoot;
                 poolRoot = poolRoot.next;
                 rentItem.next = null;
-                poolSize--;
+                FreeCount--;
             }
             rentItem.BeforeRent();
             rentItem.isRented = true;
+            RentCount++;
             return rentItem;
         }
 
@@ -46,10 +50,12 @@ namespace EasyTask.Pools
             isRented = false;
             next = poolRoot;
             poolRoot = (TItem)this;
-            poolSize++;
+            FreeCount++;
+            RentCount--;
         }
 
         protected virtual void BeforeRent() { }
+
         protected virtual void Reset() { }
 
         public void Dispose() => Return();

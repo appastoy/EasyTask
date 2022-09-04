@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 
 namespace EasyTask
@@ -32,28 +34,39 @@ namespace EasyTask
             protected readonly ExceptionDispatchInfo exceptionDispatchInfo;
             bool hasGetResultOrGetException;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ExceptionSource(ExceptionDispatchInfo exceptionDispatchInfo)
             {
                 this.exceptionDispatchInfo = exceptionDispatchInfo;
             }
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Exception GetException()
             {
                 EnsureUseException();
                 return exceptionDispatchInfo.SourceException;
             }
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void GetResult(short _)
             {
                 EnsureUseException();
                 exceptionDispatchInfo.Throw();
             }
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ETaskStatus GetStatus(short _) => ETaskStatus.Faulted;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void OnCompleted(Action<object> continuation, object state, short token)
                 => continuation?.Invoke(state);
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected void EnsureUseException()
             {
                 if (!hasGetResultOrGetException)
@@ -72,12 +85,16 @@ namespace EasyTask
 
         internal sealed class ExceptionSource<T> : ExceptionSource, IETaskSource<T>
         {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ExceptionSource(ExceptionDispatchInfo exceptionDispatchInfo)
                 : base(exceptionDispatchInfo) 
             {
 
             }
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             new public T GetResult(short _)
             {
                 EnsureUseException();

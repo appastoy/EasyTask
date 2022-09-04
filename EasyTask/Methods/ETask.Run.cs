@@ -22,7 +22,6 @@ namespace EasyTask
             await func.Invoke();
         }
 
-
         public static async ETask<T> Run<T>(Func<T> func)
         {
             if (func == null)

@@ -1,5 +1,6 @@
 ﻿using EasyTask.Sources;
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EasyTask.Promises
@@ -15,6 +16,7 @@ namespace EasyTask.Promises
     internal abstract class ContinuePromiseBase<T> : ETaskCompletionSourceBase<T>, IContinuePromise
         where T : ContinuePromiseBase<T>, new()
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Create(IETaskSource source, short token, in CancellationToken cancellationToken)
         {
             var promise = Rent();
@@ -28,6 +30,7 @@ namespace EasyTask.Promises
 
         public abstract void OnTrySetResult();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             base.Reset();

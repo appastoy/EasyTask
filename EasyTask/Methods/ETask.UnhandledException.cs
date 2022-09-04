@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 
@@ -11,6 +12,7 @@ namespace EasyTask
 
         public static event Action<Exception>? UnhandledExceptionHandler;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void PublishUnhandledException(ExceptionDispatchInfo exceptionDispatchInfo)
         {
             if (mainThreadContext != null && mainThreadContext != SynchronizationContext.Current)
@@ -19,6 +21,7 @@ namespace EasyTask
                 OnPublish(exceptionDispatchInfo);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void PublishUnhandledException(Exception exception)
         {
             if (mainThreadContext != null && mainThreadContext != SynchronizationContext.Current)

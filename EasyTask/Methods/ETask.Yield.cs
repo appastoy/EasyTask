@@ -14,7 +14,10 @@ namespace EasyTask
 
             public readonly struct Awaiter : ICriticalNotifyCompletion
             {
-                public bool IsCompleted => false;
+                public bool IsCompleted
+                {
+                    get => false;
+                }
 
                 public void GetResult() { }
 

@@ -2,15 +2,18 @@
 using EasyTask.Promises;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EasyTask
 {
     partial struct ETask
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAny(params ETask[] tasks)
             => WhenAnyPromise.Create(tasks).Task;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAny(IEnumerable<ETask> tasks)
         {
             if (tasks == null)
@@ -19,9 +22,11 @@ namespace EasyTask
             return WhenAnyPromise.Create(tasks.ToReadOnlyList()).Task;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<(T, int)>  WhenAny<T>(params ETask<T>[] tasks)
             => WhenAnyPromise<T>.Create(tasks).Task;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<(T, int)> WhenAny<T>(IEnumerable<ETask<T>> tasks)
         {
             if (tasks == null)
@@ -32,12 +37,14 @@ namespace EasyTask
 
         internal sealed class WhenAnyPromise : WhenPromise<WhenAnyPromise>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override bool CheckCompleted()
                 => Interlocked.Increment(ref countCompleted) == 1;
         }
 
         internal sealed class WhenAnyPromise<T> : WhenPromise<WhenAnyPromise<T>, T, (T, int)>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void OnTaskCompleted(in ETask<T>.Awaiter awaiter, int index)
             {
                 T result;

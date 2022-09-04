@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,9 +10,10 @@ namespace EasyTask
     {
         static readonly Action<object?> InvokeTaskSetResultDelegate = InvokeTaskSetResult;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ValueTask AsValueTask()
         {
-            if (source is null || IsCompletedSuccessfully)
+            if (source == null || IsCompletedSuccessfully)
                 return default;
 
             return new ValueTask(source, token);

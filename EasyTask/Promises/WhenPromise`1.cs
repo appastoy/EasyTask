@@ -2,6 +2,7 @@
 using EasyTask.Sources;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace EasyTask.Promises
 {
@@ -11,9 +12,14 @@ namespace EasyTask.Promises
         static readonly Action<object> InvokeOnTaskCompleted = OnTaskCompletedCallback;
 
         IReadOnlyList<ETask<TResult>>? tasks;
-        protected int TaskCount => tasks?.Count ?? 0;
+        protected int TaskCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => tasks?.Count ?? 0;
+        }
         protected int countCompleted;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TPromise Create(IReadOnlyList<ETask<TResult>> tasks)
         {
             var promise = Rent();
@@ -21,6 +27,7 @@ namespace EasyTask.Promises
             return promise;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void Initialize(IReadOnlyList<ETask<TResult>> tasks)
         {
             this.tasks = tasks;
@@ -57,8 +64,10 @@ namespace EasyTask.Promises
             tuple._1.OnTaskCompleted(in tuple._2, tuple._3);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnTaskCompleted(in ETask<TResult>.Awaiter awaiter, int index) { }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             base.Reset();

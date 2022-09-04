@@ -1,5 +1,6 @@
 ﻿using EasyTask.Sources;
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 #pragma warning disable CS8618
@@ -19,14 +20,21 @@ namespace EasyTask.CompilerServices
         TStateMachine stateMachine;
         public Action InvokeMoveNext { get; }
 
-        public static MoveNextPromise<TStateMachine> Create(ref TStateMachine stateMachine)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Create(ref TStateMachine stateMachine, out IMoveNextPromise outPromise)
         {
             var promise = Rent();
+            outPromise = promise;
             promise.stateMachine = stateMachine;
-            return promise;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MoveNextPromise() => InvokeMoveNext = MoveNext;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void MoveNext() => stateMachine.MoveNext();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Reset()
         {
             base.Reset();

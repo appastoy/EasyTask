@@ -1,16 +1,20 @@
 ﻿using EasyTask.Sources;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EasyTask
 {
     partial struct ETask
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask Delay(TimeSpan duration, CancellationToken cancellationToken = default)
         {
             return DelayPromise.Create(duration, cancellationToken).Task;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask Delay(int milliseconds, CancellationToken cancellationToken = default)
         {
             return Delay(new TimeSpan(milliseconds * TimeSpan.TicksPerMillisecond), cancellationToken);
@@ -21,6 +25,8 @@ namespace EasyTask
             static readonly Action<DelayPromise> InvokeDelayCheck = DelayCheck;
             static readonly Action<DelayPromise> InvokeDelayCheckWithCancel = DelayCheckWithCancel;
 
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static DelayPromise Create(TimeSpan duration, CancellationToken cancellationToken)
             {
                 var promise = Rent();
@@ -36,6 +42,7 @@ namespace EasyTask
             DateTime endTime;
             CancellationToken cancellationToken;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected override void Reset()
             {
                 base.Reset();

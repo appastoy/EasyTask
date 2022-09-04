@@ -2,16 +2,24 @@
 {
     public enum ETaskStatus : byte
     {
-        // The operation has not yet completed.
+        /// <summary>
+        /// The operation has not yet completed.
+        /// </summary>
         Pending = 0,
         
-        // The operation completed successfully.
+        /// <summary>
+        /// The operation completed successfully.
+        /// </summary>
         Succeeded = 1,
         
-        // The operation completed with an error.
+        /// <summary>
+        /// The operation completed with an error.
+        /// </summary>
         Faulted = 2,
         
-        // The operation completed due to cancellation.
+        /// <summary>
+        /// The operation completed due to cancellation.
+        /// </summary>
         Canceled = 3
     }
 }

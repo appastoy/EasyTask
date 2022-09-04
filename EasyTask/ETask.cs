@@ -1,56 +1,106 @@
 ﻿using EasyTask.CompilerServices;
 using EasyTask.Helpers;
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace EasyTask
 {
+    /// <summary>
+    /// Lightweight task object for zero allocation.
+    /// </summary>
     [StructLayout(LayoutKind.Auto, Pack = 2)]
     [AsyncMethodBuilder(typeof(ETaskMethodBuilder))]
     public readonly partial struct ETask
     {
-        public static readonly ETask CompletedTask = new ETask();
+        public static readonly ETask CompletedTask = new();
 
         internal readonly IETaskSource source;
         internal readonly short token;
 
-        public ETaskStatus Status => source?.GetStatus(token) ?? ETaskStatus.Succeeded;
-        public bool IsCompleted => Status != ETaskStatus.Pending;
-        public bool IsCompletedSuccessfully => Status == ETaskStatus.Succeeded;
-        public bool IsFaulted => Status == ETaskStatus.Faulted;
-        public bool IsCanceled => Status == ETaskStatus.Canceled;
+        public ETaskStatus Status
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => source?.GetStatus(token) ?? ETaskStatus.Succeeded;
+        }
 
-        public Exception? Exception => 
-            source is ExceptionSource exceptionSource ? exceptionSource.GetException() :
-            source is CanceledSource canceledSource ? canceledSource.Exception : 
-            null;
+        /// <summary>
+        /// Is Completed Successfully or Exception Raised or Canceled?
+        /// </summary>
+        public bool IsCompleted
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Status != ETaskStatus.Pending;
+        }
 
+        public bool IsCompletedSuccessfully
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Status == ETaskStatus.Succeeded;
+        }
+
+        /// <summary>
+        /// Is Exception Raised? (except OperationCanceledException)
+        /// </summary>
+        public bool IsFaulted
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Status == ETaskStatus.Faulted;
+        }
+
+        /// <summary>
+        /// Is OperationCanceledException Raised?
+        /// </summary>
+        public bool IsCanceled
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Status == ETaskStatus.Canceled;
+        }
+
+        public Exception? Exception
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => source is ExceptionSource exceptionSource ? exceptionSource.GetException() :
+                   source is CanceledSource canceledSource ? canceledSource.Exception :
+                   null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ETask(IETaskSource source, short token)
         {
             this.source = source;
             this.token = token;
         }
 
-        public Awaiter GetAwaiter() => new Awaiter(in this);
+        [DebuggerHidden]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Awaiter GetAwaiter() => new(in this);
 
         public readonly struct Awaiter : ICriticalNotifyCompletion
         {
             readonly ETask task;
 
-            public bool IsCompleted => task.IsCompleted;
-
-            internal Awaiter(in ETask task)
+            /// <summary>
+            /// Is Completed Successfully or Exception Raised or Canceled?
+            /// </summary>
+            public bool IsCompleted
             {
-                this.task = task;
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => task.IsCompleted;
             }
 
-            public void GetResult()
-            {
-                task.source?.GetResult(task.token);
-            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal Awaiter(in ETask task) => this.task = task;
 
-            public void OnCompleted(Action continuation)
+            /// <summary>
+            /// This method cannot be called [more than once] or [after awaited] after the task has been created. Be aware.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void GetResult() => task.source?.GetResult(task.token);
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void INotifyCompletion.OnCompleted(Action continuation)
             {
                 if (task.source is null)
                     continuation.Invoke();
@@ -58,13 +108,16 @@ namespace EasyTask
                     OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
             }
 
-            public void UnsafeOnCompleted(Action continuation)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void ICriticalNotifyCompletion.UnsafeOnCompleted(Action continuation)
             {
                 if (task.source is null)
                     continuation.Invoke();
                 else
                     OnCompleted(DelegateCache.InvokeAsActionObject, continuation);
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void OnCompleted(Action<object> continuation, object state)
             {
                 if (task.source is null)
