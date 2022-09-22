@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EasyTask.Pools
 {
-    public class PoolItem<TItem> : IDisposable
+    public abstract class PoolItem<TItem> : IDisposable
         where TItem : PoolItem<TItem>, new()
     {
         static TItem? poolRoot;

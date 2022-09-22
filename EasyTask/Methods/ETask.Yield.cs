@@ -7,6 +7,10 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Yield clock to other thread.
+        /// </summary>
+        /// <returns>Awaitable</returns>
         public static YieldAwaitable Yield() => default;
         public readonly struct YieldAwaitable
         {

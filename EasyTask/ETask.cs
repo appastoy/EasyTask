@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace EasyTask
 {
     /// <summary>
-    /// Lightweight task object for zero allocation.
+    /// Lightweight task object for less allocation.
     /// </summary>
     [StructLayout(LayoutKind.Auto, Pack = 2)]
     [AsyncMethodBuilder(typeof(ETaskMethodBuilder))]

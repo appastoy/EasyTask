@@ -224,26 +224,26 @@ public class ETask_Tests
     [Fact]
     public void RunSynchronously()
     {
-        //{
-        //    int actionInvoked = 0;
-        //    ETask.RunSynchronously(() =>
-        //    {
-        //        SynchronizationContext.Current!.Post(_ => actionInvoked = 2, null);
-        //        actionInvoked = 1;
-        //    });
-        //    actionInvoked.Should().Be(2);
-        //}
-        //
-        //{
-        //    var func = ETask.RunSynchronously<Func<string>>(() =>
-        //    {
-        //        string value = "a";
-        //        SynchronizationContext.Current!.Post(_ => value = "b", null);
-        //
-        //        return () => value;
-        //    });
-        //    func().Should().Be("b");
-        //}
+        {
+            int actionInvoked = 0;
+            ETask.RunSynchronously(() =>
+            {
+                SynchronizationContext.Current!.Post(_ => actionInvoked = 2, null);
+                actionInvoked = 1;
+            });
+            actionInvoked.Should().Be(2);
+        }
+        
+        {
+            var func = ETask.RunSynchronously<Func<string>>(() =>
+            {
+                string value = "a";
+                SynchronizationContext.Current!.Post(_ => value = "b", null);
+        
+                return () => value;
+            });
+            func().Should().Be("b");
+        }
 
         {
             int etaskInvoked = 0;
@@ -256,7 +256,7 @@ public class ETask_Tests
             etaskInvoked.Should().Be(3);
         }
 
-        /*{
+        {
             var value = ETask.RunSynchronously(async () =>
             {
                 string value = "a";
@@ -266,7 +266,6 @@ public class ETask_Tests
             });
             value.Should().Be("c");
         }
-        */
     }
 
     [Fact]

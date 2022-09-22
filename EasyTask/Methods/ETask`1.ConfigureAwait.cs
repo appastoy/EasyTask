@@ -6,6 +6,11 @@ namespace EasyTask
 {
     partial struct ETask<TResult>
     {
+        /// <summary>
+        /// Configure to capture current context.
+        /// </summary>
+        /// <param name="captureContext">Do you want to capture?</param>
+        /// <returns>Awaitable</returns>
         public ConfigureAwaitable ConfigureAwait(bool captureContext)
         {
             if (!IsCompleted &&

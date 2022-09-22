@@ -8,6 +8,10 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Switch to thread pool.(switch to other thread from current thread.)
+        /// </summary>
+        /// <returns>Awaitable</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SwitchToThreadPoolAwaitable SwitchToThreadPool() => default;
 

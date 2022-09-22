@@ -9,30 +9,72 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Await until all tasks are completed.
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAll(params ETask[] tasks)
-            => WhenAllPromise.Create(tasks).Task;
+        {
+            if (tasks.Length == 0)
+                return CompletedTask;
+            
+            return WhenAllPromise.Create(tasks).Task;
+        }
 
+        /// <summary>
+        /// Await until all tasks are completed.
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">tasks is null</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAll(IEnumerable<ETask> tasks)
         {
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
 
-            return WhenAllPromise.Create(tasks.ToReadOnlyList()).Task;
+            var taskList = tasks.ToReadOnlyList();
+            if (taskList.Count == 0)
+                return CompletedTask;
+
+            return WhenAllPromise.Create(taskList).Task;
         }
 
+        /// <summary>
+        /// Await until all tasks are completed.
+        /// </summary>
+        /// <typeparam name="T">Task result type</typeparam>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>Task with results of all tasks.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<T[]> WhenAll<T>(params ETask<T>[] tasks)
-            => WhenAllPromise<T>.Create(tasks).Task;
-
+        {
+            if (tasks.Length == 0)
+                return FromResult(Array.Empty<T>());
+            
+            return WhenAllPromise<T>.Create(tasks).Task;
+        }
+        
+        /// <summary>
+        /// Await until all tasks are completed.
+        /// </summary>
+        /// <typeparam name="T">Task result type</typeparam>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>Task with results of all tasks.</returns>
+        /// <exception cref="ArgumentNullException">tasks is null</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<T[]> WhenAll<T>(IEnumerable<ETask<T>> tasks)
         {
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
 
-            return WhenAllPromise<T>.Create(tasks.ToReadOnlyList()).Task;
+            var taskList = tasks.ToReadOnlyList();
+            if (taskList.Count == 0)
+                return FromResult(Array.Empty<T>());
+
+            return WhenAllPromise<T>.Create(taskList).Task;
         }
 
         internal sealed class WhenAllPromise : WhenPromise<WhenAllPromise>

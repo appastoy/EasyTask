@@ -11,6 +11,13 @@ namespace EasyTask
 {
     partial struct ETask<TResult>
     {
+        /// <summary>
+        /// Set continuation task with result.
+        /// </summary>
+        /// <param name="continuation">Continuation action</param>
+        /// <param name="cancellationToken">Cancellation token before execute</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask ContinueWith(Action<ETask<TResult>> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -32,6 +39,14 @@ namespace EasyTask
             return ContinuePromise.Create(in this, continuation, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set continuation with new result.
+        /// </summary>
+        /// <typeparam name="TNewResult">New result type.</typeparam>
+        /// <param name="continuation">Continuation func</param>
+        /// <param name="cancellationToken">Cancellation token before execute</param>
+        /// <returns>Task with new result</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask<TNewResult> ContinueWith<TNewResult>(Func<ETask<TResult>, TNewResult> continuation, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -52,6 +67,14 @@ namespace EasyTask
             return ContinuePromise<TNewResult>.Create(in this, continuation, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set continuation with state.
+        /// </summary>
+        /// <param name="continuation">Continuation action</param>
+        /// <param name="state">Continuation state</param>
+        /// <param name="cancellationToken">Cancellation token before execute</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask ContinueWith(Action<ETask<TResult>, object> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)
@@ -73,6 +96,15 @@ namespace EasyTask
             return ContinueWithStatePromise.Create(in this, continuation, state, in cancellationToken).Task;
         }
 
+        /// <summary>
+        /// Set continuation with new result with state.
+        /// </summary>
+        /// <typeparam name="TNewResult">New result type</typeparam>
+        /// <param name="continuation">Continuation func</param>
+        /// <param name="state">Continuation state</param>
+        /// <param name="cancellationToken">Cancellation token before execute.</param>
+        /// <returns>Task with new result</returns>
+        /// <exception cref="ArgumentNullException">continuation is null</exception>
         public ETask<TNewResult> ContinueWith<TNewResult>(Func<ETask<TResult>, object, TNewResult> continuation, object state, CancellationToken cancellationToken = default)
         {
             if (continuation == null)

@@ -9,23 +9,61 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Await until any task is completed.
+        /// </summary>
+        /// <param name="tasks">Task</param>
+        /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAny(params ETask[] tasks)
-            => WhenAnyPromise.Create(tasks).Task;
+        {
+            if (tasks.Length == 0)
+                return CompletedTask;
+            
+            return WhenAnyPromise.Create(tasks).Task;
+        }
 
+        /// <summary>
+        /// Await until any task is completed.
+        /// </summary>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>Task</returns>
+        /// <exception cref="ArgumentNullException">tasks is null</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask WhenAny(IEnumerable<ETask> tasks)
         {
             if (tasks == null)
                 throw new ArgumentNullException(nameof(tasks));
 
-            return WhenAnyPromise.Create(tasks.ToReadOnlyList()).Task;
+            var taskList = tasks.ToReadOnlyList();
+            if (taskList.Count == 0)
+                return CompletedTask;
+
+            return WhenAnyPromise.Create(taskList).Task;
         }
 
+        /// <summary>
+        /// Await until any task is completed.
+        /// </summary>
+        /// <typeparam name="T">ETask result type.</typeparam>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>First completed task and index.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<(T, int)>  WhenAny<T>(params ETask<T>[] tasks)
-            => WhenAnyPromise<T>.Create(tasks).Task;
+        {
+            if (tasks.Length == 0)
+                return FromResult<(T, int)>(default);
+            
+            return WhenAnyPromise<T>.Create(tasks).Task;
+        }
 
+        /// <summary>
+        /// Await until any task is completed.
+        /// </summary>
+        /// <typeparam name="T">ETask result type</typeparam>
+        /// <param name="tasks">Tasks</param>
+        /// <returns>First completed task and index.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ETask<(T, int)> WhenAny<T>(IEnumerable<ETask<T>> tasks)
         {

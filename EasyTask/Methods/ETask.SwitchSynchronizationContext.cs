@@ -8,6 +8,12 @@ namespace EasyTask
 {
     partial struct ETask
     {
+        /// <summary>
+        /// Switch passed synchronization context.
+        /// </summary>
+        /// <param name="context">Synchronization context</param>
+        /// <returns>Awaitable</returns>
+        /// <exception cref="ArgumentNullException">context is null</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SwitchSynchronizationContextAwaitable SwitchSynchronizationContext(SynchronizationContext context)
         {

@@ -10,6 +10,10 @@ namespace EasyTask
         static readonly SendOrPostCallback InvokeOnPublish = OnPublish;
         static readonly SendOrPostCallback InvokeOnThrow = OnThrow;
 
+        /// <summary>
+        /// <para>Unhandled exception in running task handler. If you set main thread context, Handler is called on main thread.</para>
+        /// <para>If not, Handler is called on the thread where the task is running.</para>
+        /// </summary>
         public static event Action<Exception>? UnhandledExceptionHandler;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

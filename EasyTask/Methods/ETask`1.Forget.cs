@@ -9,6 +9,9 @@ namespace EasyTask
     {
         static readonly Action<object> InvokeProcessOnCompleted = OnProcessOnCompleted;
 
+        /// <summary>
+        /// Forget a task. If task has an error when completed, Error is rethrown on main thread.
+        /// </summary>
         public void Forget()
         {
             var awaiter = GetAwaiter();
