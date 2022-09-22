@@ -1,6 +1,11 @@
 # EasyTask
 
-This project is for learning purpose to better understand the task. However, I made it for practical use, considering optimization and maintainability. I didn't fully test all areas, but most methods were tested through unit tests. This project is strongly inspired by the UniTask project.
+This project is for learning purpose to better understand the "Task". 
+However, I made this for practical use. So I considered optimization and maintainability.
+I didn't fully test all areas, but most methods were tested through unit tests. 
+This project is strongly inspired by the [UniTask project](https://github.com/Cysharp/UniTask).
+But the purpose of this project is different from UniTask that it is not for Unity3d first. 
+It is based on netstandard2.1 and is expected to be used by many dotnet projects.
 
 # Overview
 ### ValueTask based
