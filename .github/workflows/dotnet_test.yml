@@ -30,10 +30,10 @@ jobs:
         configuration: [Debug, Release]
         
     env:
-      configuration: ${{ matrix.configuration }}
+      CONFIG: ${{ matrix.configuration }}
         
     steps:
     - name: Build
-      run: dotnet build --no-restore --configuration ${env:configuration}
+      run: dotnet build --no-restore --configuration $CONFIG
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration ${env:configuration}
+      run: dotnet test --no-build --verbosity normal --configuration $CONFIG
