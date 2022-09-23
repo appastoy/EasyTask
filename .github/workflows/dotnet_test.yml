@@ -27,10 +27,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [Debug, Release]
+        configuration: [Debug, Release]
+        
+    env:
+      configuration: ${{ matrix.configuration }}
         
     steps:
     - name: Build
-      run: dotnet build --no-restore --configuration ${{ matrix:config }}
+      run: dotnet build --no-restore --configuration ${env:configuration}
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration ${{ matrix:config }}
+      run: dotnet test --no-build --verbosity normal --configuration ${env:configuration}
