@@ -2,6 +2,7 @@ using Xunit.Sdk;
 
 namespace EasyTask.Tests;
 
+[Collection(nameof(NoParallel))]
 public class ETask_T_Tests
 {
     [Fact]

@@ -3,6 +3,7 @@ using Xunit.Sdk;
 
 namespace EasyTask.Tests;
 
+[Collection(nameof(NoParallel))]
 public class ETask_Tests
 {
     readonly ITestOutputHelper output;

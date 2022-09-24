@@ -1,4 +1,6 @@
 ﻿namespace EasyTask.Tests;
+
+[Collection(nameof(NoParallel))]
 public class ETaskVoid_Tests
 {
     [Fact]
