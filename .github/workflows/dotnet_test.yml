@@ -26,7 +26,7 @@ jobs:
         dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build On ${{ env:CONFIG }}
+    - name: Build On ${{ matrix.configuration }}
       run: dotnet build --no-restore --configuration $CONFIG
-    - name: Test On ${{ env:CONFIG }}
+    - name: Test On ${{ matrix.configuration }}
       run: dotnet test --no-build --verbosity normal --configuration $CONFIG -- Xunit.ParallelizeTestCollections=false MaxParallelThreads=1
