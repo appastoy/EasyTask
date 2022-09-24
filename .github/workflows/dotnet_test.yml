@@ -9,7 +9,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-            
+    
+    strategy:
+      fail-fast: false
+      matrix: 
+        configuration: [Debug, Release]
+
+    env:
+      CONFIG: ${{ matrix.configuration }}
+
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -18,11 +26,7 @@ jobs:
         dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build On Debug
-      run: dotnet build --no-restore
-    - name: Test On Debug
-      run: dotnet test --no-build --verbosity normal
-    - name: Build On Release
-      run: dotnet build --no-restore --configuration Release
-    - name: Test On Release
-      run: dotnet test --no-build --verbosity normal --configuration Release
+    - name: Build On ${{ env:CONFIG }}
+      run: dotnet build --no-restore --configuration $CONFIG
+    - name: Test On ${{ env:CONFIG }}
+      run: dotnet test --no-build --verbosity normal --configuration $CONFIG -- Xunit.ParallelizeTestCollections=false MaxParallelThreads=1
