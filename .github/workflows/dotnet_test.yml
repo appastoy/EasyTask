@@ -28,6 +28,6 @@ jobs:
     - name: Build on Release
       run: dotnet build --no-restore --configuration Release
     - name: Test On Debug
-      run: dotnet test --no-build --verbosity normal --configuration Debug -- Xunit.ParallelizeTestCollections=false MaxParallelThreads=1
+      run: dotnet test --no-build --verbosity normal --configuration Debug
     - name: Test On Release
-      run: dotnet test --no-build --verbosity normal --configuration Release -- Xunit.ParallelizeTestCollections=false MaxParallelThreads=1
+      run: dotnet test --no-build --verbosity normal --configuration Release
