@@ -172,7 +172,7 @@ namespace EasyTask.Sources
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PostOrInvokeContinuation(Action<object> continuation, object state)
         {
-            if (context == null || 
+            if (context == null ||
                 context == SynchronizationContext.Current)
                 continuation.Invoke(state);
             else

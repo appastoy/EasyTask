@@ -73,6 +73,10 @@ namespace EasyTask
             this.token = token;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ETaskVoid Action(Func<ETaskVoid> func) 
+            => func.Invoke();
+
         [DebuggerHidden]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Awaiter GetAwaiter() => new(in this);

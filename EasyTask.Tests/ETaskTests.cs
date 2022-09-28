@@ -226,27 +226,6 @@ public class ETask_Tests
     public void RunSynchronously()
     {
         {
-            int actionInvoked = 0;
-            ETask.RunSynchronously(() =>
-            {
-                SynchronizationContext.Current!.Post(_ => actionInvoked = 2, null);
-                actionInvoked = 1;
-            });
-            actionInvoked.Should().Be(2);
-        }
-        
-        {
-            var func = ETask.RunSynchronously<Func<string>>(() =>
-            {
-                string value = "a";
-                SynchronizationContext.Current!.Post(_ => value = "b", null);
-        
-                return () => value;
-            });
-            func().Should().Be("b");
-        }
-
-        {
             int etaskInvoked = 0;
             ETask.RunSynchronously(async () =>
             {

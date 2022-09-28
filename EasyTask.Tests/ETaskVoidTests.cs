@@ -3,17 +3,23 @@
 [Collection(nameof(NoParallel))]
 public class ETaskVoid_Tests
 {
+    private readonly ITestOutputHelper output;
+
+    public ETaskVoid_Tests(ITestOutputHelper output)
+    {
+        this.output = output;
+    }
+
     [Fact]
     public void ReturnNormally()
     {
         ETask.RunSynchronously(Action);
-        static void Action()
+        static async ETask Action()
         {
             int value = 0;
             Test().Forget();
 
-            while (value == 0)
-                Thread.Yield();
+            await ETask.WaitWhile(() => value == 0);
 
             value.Should().Be(1);
 
@@ -32,11 +38,10 @@ public class ETaskVoid_Tests
         {
             bool isEnd = false;
             ETask.RunSynchronously(Action);
-            void Action()
+            async ETask Action()
             {
                 Test().Forget();
-                while (!isEnd)
-                    Thread.Yield();
+                await ETask.WaitUntil(() => isEnd);
             }
 
             async ETaskVoid Test()
@@ -62,11 +67,10 @@ public class ETaskVoid_Tests
         {
             bool isEnd = false;
             ETask.RunSynchronously(Action);
-            void Action()
+            async ETask Action()
             {
                 Test(new CancellationToken(true)).Forget();
-                while (!isEnd)
-                    Thread.Yield();
+                await ETask.WaitUntil(() => isEnd);
             }
 
             async ETaskVoid Test(CancellationToken token)
@@ -94,8 +98,7 @@ public class ETaskVoid_Tests
         async ETask FuncETask()
         {
             FuncETaskVoid().Forget();
-            while (true)
-                await ETask.Yield();
+            await ETask.WaitForever();
         }
         async ETaskVoid FuncETaskVoid()
         {

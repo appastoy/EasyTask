@@ -36,7 +36,7 @@ namespace EasyTask.Sources
         public void TrySetResult()
         {
             if (IsCompletedFirst())
-               InvokeContinuation();
+                InvokeContinuation();
         }
     }
 }

@@ -28,11 +28,11 @@ namespace EasyTask.CompilerServices
         {
             try
             {
-                promise?.Return();
+                ETask.PublishUnhandledException(ExceptionDispatchInfo.Capture(exception));
             }
             finally
             {
-                ETask.PublishUnhandledException(ExceptionDispatchInfo.Capture(exception));
+                promise?.Return();
             }
         }
 

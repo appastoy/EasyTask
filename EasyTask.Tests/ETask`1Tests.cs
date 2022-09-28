@@ -284,8 +284,7 @@ public class ETask_T_Tests
         async ETask FuncETask()
         {
             FuncETaskResultForget().Forget();
-            while (true)
-                await ETask.Yield();
+            await ETask.WaitForever();
         }
         async ETask<int> FuncETaskResultForget()
         {

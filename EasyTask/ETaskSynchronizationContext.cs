@@ -76,17 +76,6 @@ public sealed class ETaskSynchronizationContext : SynchronizationContext
             ProcessPostsCore();
     }
 
-    /// <summary>
-    /// Process reserved posts. It process posts repeatedly. (New posts may be reserved when posts are processed.)
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ProcessPostsLoop()
-    {
-        ThrowIfCurrentThreadIsNotCreatedThread();
-        while (posts.Count > 0)
-            ProcessPostsCore();
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     void ThrowIfCurrentThreadIsNotCreatedThread([CallerMemberName] string methodName = "")
     {
@@ -163,12 +152,12 @@ public sealed class ETaskSynchronizationContext : SynchronizationContext
         public readonly ETaskSynchronizationContext Current;
 
         [DebuggerHidden]
-        internal ContextScope(SynchronizationContext? prevContext)
+        internal ContextScope(SynchronizationContext? prevContext, ETaskSynchronizationContext scopedContext)
         {
             this.prevContext = prevContext;
             prevMainThreadContext = ETask.MainThreadContext;
 
-            Current = new ETaskSynchronizationContext();
+            Current = scopedContext;
             SetSynchronizationContext(Current);
             ETask.SetMainThreadContext(Current);
         }
@@ -185,5 +174,5 @@ public sealed class ETaskSynchronizationContext : SynchronizationContext
     /// </summary>
     /// <returns>context scope</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ContextScope CreateScope() => new(Current);
+    public static ContextScope CreateScope() => new(Current, new ETaskSynchronizationContext());
 }

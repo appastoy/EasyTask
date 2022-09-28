@@ -249,25 +249,6 @@ Assert.NotEqaul(threadIdBeforeAwait, threadIdAfterAwait);
 ```csharp
 // Run synchronously with synchronization context posting garenteed.
 
-// Run action.
-int actionInvoked = 0;
-ETask.RunSynchronously(() =>
-{
-    SynchronizationContext.Current!.Post(_ => actionInvoked = 2, null);
-    actionInvoked = 1;
-});
-actionInvoked.Should().Be(2);
-        
-// Run func.
-var func = ETask.RunSynchronously<Func<string>>(() =>
-{
-    string value = "a";
-    SynchronizationContext.Current!.Post(_ => value = "b", null);
-        
-    return () => value;
-});
-func().Should().Be("b");
-
 // Run ETask action.
 int etaskInvoked = 0;
 ETask.RunSynchronously(async () =>

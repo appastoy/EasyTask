@@ -7,57 +7,6 @@ namespace EasyTask
     partial struct ETask
     {
         /// <summary>
-        /// Run action synchronously on current thread..
-        /// </summary>
-        /// <param name="action">action</param>
-        /// <exception cref="ArgumentNullException">action is null</exception>
-        public static void RunSynchronously(Action action)
-        {
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
-
-            using var scope = ETaskSynchronizationContext.CreateScope();
-
-            action.Invoke();
-            scope.Current.ProcessPostsLoop();
-        }
-
-        /// <summary>
-        /// Run func synchronously on current thread..
-        /// </summary>
-        /// <typeparam name="TResult">Result type</typeparam>
-        /// <param name="func">func</param>
-        /// <returns>Result</returns>
-        /// <exception cref="ArgumentNullException">func is null</exception>
-        public static TResult RunSynchronously<TResult>(Func<TResult> func)
-        {
-            if (func == null)
-                throw new ArgumentNullException(nameof(func));
-
-            using var scope = ETaskSynchronizationContext.CreateScope();
-
-            var result = func.Invoke();
-            scope.Current.ProcessPostsLoop();
-            return result;
-        }
-
-        /// <summary>
-        /// Run ETaskVoid func synchronously on current thread..
-        /// </summary>
-        /// <param name="func">ETaskVoid func</param>
-        /// <exception cref="ArgumentNullException">func is null</exception>
-        public static void RunVoidSynchronously(Func<ETaskVoid> func)
-        {
-            if (func == null)
-                throw new ArgumentNullException(nameof(func));
-
-            using var scope = ETaskSynchronizationContext.CreateScope();
-
-            func.Invoke().Forget();
-            scope.Current.ProcessPostsLoop();
-        }
-
-        /// <summary>
         /// Run ETask func synchronously on current thread..
         /// </summary>
         /// <param name="func">ETask func</param>
