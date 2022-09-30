@@ -104,6 +104,7 @@ public class ETask_T_Tests
             runThreadId = await ETask.Run(() =>
                 {
                     Thread.Sleep(1);
+                    Thread.Sleep(1);
                     return Environment.CurrentManagedThreadId;
                 })
                 .ConfigureAwait(false);
@@ -113,13 +114,14 @@ public class ETask_T_Tests
 
             await ETask.SwitchToMainThread();
 
-            await ETask.Run(Func2).ConfigureAwait(false);
+            runThreadId = await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
             Environment.CurrentManagedThreadId.Should().NotBe(threadId);
 
             static async ETask<int> Func2()
             {
+                await ETask.Yield();
                 await ETask.Yield();
                 return Environment.CurrentManagedThreadId;
             }
