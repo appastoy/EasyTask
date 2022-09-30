@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +12,7 @@ namespace EasyTask
         /// </summary>
         /// <param name="func">ETask func</param>
         /// <exception cref="ArgumentNullException">func is null</exception>
-        public static void RunSynchronously(Func<ETask> func)
+        public static void RunSynchronously(Func<ETask> func, [CallerMemberName]string name = "")
         {
             if (func == null)
                 throw new ArgumentNullException(nameof(func));

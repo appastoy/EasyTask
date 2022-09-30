@@ -1,5 +1,6 @@
 ﻿using EasyTask.CompilerServices;
 using EasyTask.Helpers;
+using EasyTask.Sources;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -75,6 +76,7 @@ namespace EasyTask
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => source is ETask.ExceptionSource exceptionSource ? exceptionSource.GetException() :
                    source is ETask.CanceledSource canceledSource ? canceledSource.Exception :
+                   source is IExceptionHolder exceptionHolder ? exceptionHolder.Exception :
                    null;
         }
 

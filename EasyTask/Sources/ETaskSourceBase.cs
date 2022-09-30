@@ -16,7 +16,12 @@ namespace EasyTask.Sources
         void SetCaptureContext(bool captureContext);
     }
 
-    public abstract class ETaskSourceBase<T> : PoolItem<T>, IConfigureAwaitable
+    internal interface IExceptionHolder
+    {
+        Exception? Exception { get; }
+    }
+
+    public abstract class ETaskSourceBase<T> : PoolItem<T>, IConfigureAwaitable, IExceptionHolder
         where T : ETaskSourceBase<T>, new()
     {
         short token;
@@ -33,6 +38,15 @@ namespace EasyTask.Sources
             get => token;
         }
 
+        public Exception? Exception
+        {
+            [DebuggerHidden]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => error is Exception ex ? ex :
+                   error is ExceptionHolder holder ? holder.GetException().SourceException :
+                   null;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void BeforeRent() => context = SynchronizationContext.Current;
 
@@ -43,6 +57,17 @@ namespace EasyTask.Sources
                 context = SynchronizationContext.Current;
             else
                 context = null;
+        }
+
+        public override void Return(bool force = false)
+        {
+            if (force)
+            {
+                if (error is ExceptionHolder holder)
+                    holder.GetException();
+                error = null;
+            }
+            base.Return(force);
         }
 
         protected override void Reset()

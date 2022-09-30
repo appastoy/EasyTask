@@ -14,12 +14,7 @@ namespace EasyTask.Pools
         public static ListItem<T> Rent<T>(int capacity) => ListItem<T>.Rent(capacity);
     }
 
-    internal interface IListPoolItem
-    {
-        void Return();
-    }
-
-    internal sealed class ListItem<T> : PoolItem<ListItem<T>>, IReadOnlyList<T>, IListPoolItem
+    internal sealed class ListItem<T> : PoolItem<ListItem<T>>, IReadOnlyList<T>
     {
         T[] array;
         int size;

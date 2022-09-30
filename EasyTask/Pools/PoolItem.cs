@@ -3,7 +3,12 @@ using System.Threading;
 
 namespace EasyTask.Pools
 {
-    public abstract class PoolItem<TItem> : IDisposable
+    internal interface IPoolItem
+    {
+        void Return(bool force = false);
+    }
+
+    public abstract class PoolItem<TItem> : IDisposable, IPoolItem
         where TItem : PoolItem<TItem>, new()
     {
         static TItem? poolRoot;
@@ -38,7 +43,7 @@ namespace EasyTask.Pools
         bool isRented;
         TItem? next;
 
-        public void Return()
+        public virtual void Return(bool force = false)
         {
             if (!isRented)
                 return;

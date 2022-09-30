@@ -132,28 +132,38 @@ public class ETask_T_Tests
         ETask.RunSynchronously(Func);
         static async ETask Func()
         {
+            var values = new bool[4];
             var (value, index) = await ETask.WhenAny(
-                GetValueWithDelay(1, 1000),
-                GetValueWithDelay(2, 10000),
-                GetValueWithDelay(3, 1),
-                GetValueWithDelay(4, 1000000));
-            value.Should().Be(3);
+                WaitAndSet(values, 1, 2),
+                WaitAndSet(values, 10, 1),
+                WaitAndSet(values, 100, 0),
+                WaitAndSet(values, 1000, 3));
+            value.Should().Be(100);
             index.Should().Be(2);
 
-            (value, index) =await ETask.WhenAny(new List<ETask<int>>
+            values = new bool[4];
+            (value, index) = await ETask.WhenAny(new List<ETask<int>>
             {
-                GetValueWithDelay(1, 10000),
-                GetValueWithDelay(2, 1),
-                GetValueWithDelay(3, 100000),
-                GetValueWithDelay(4, 1000000)
+                WaitAndSet(values, 1000, 1),
+                WaitAndSet(values, 100, 2),
+                WaitAndSet(values, 10, 3),
+                WaitAndSet(values, 1, 0)
             });
-            value.Should().Be(2);
-            index.Should().Be(1);
+            value.Should().Be(1);
+            index.Should().Be(3);
 
-            static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+            static async ETask<int> WaitAndSet(bool[] values, int value, int index)
             {
-                await ETask.Delay(delayMilliSeconds);
-                return v;
+                if (index == 0)
+                {
+                    values![0] = true;
+                }
+                else
+                {
+                    await ETask.WaitUntil(() => values![index - 1]);
+                    values![index] = true;
+                }
+                return value;
             }
         }
     }
@@ -164,31 +174,36 @@ public class ETask_T_Tests
         ETask.RunSynchronously(Func);
         static async ETask Func()
         {
-            var task1 = ETask.WhenAll(
-                GetValueWithDelay(1, 1),
-                GetValueWithDelay(2, 20),
-                GetValueWithDelay(3, 40),
-                GetValueWithDelay(4, 60));
-            
+            var values = new bool[4];
+            var results = await ETask.WhenAll(
+                WaitAndSet(values, 1, 2),
+                WaitAndSet(values, 10, 1),
+                WaitAndSet(values, 100, 0),
+                WaitAndSet(values, 1000, 3));
+            results.Should().BeEquivalentTo(new[] {100,10,1,1000} );
 
-            var task2 = ETask.WhenAll(new List<ETask<int>>
+            values = new bool[4];
+            results = await ETask.WhenAll(new List<ETask<int>>
             {
-                GetValueWithDelay(4, 1),
-                GetValueWithDelay(3, 20),
-                GetValueWithDelay(2, 40),
-                GetValueWithDelay(1, 60)
+                WaitAndSet(values, 1000, 1),
+                WaitAndSet(values, 100, 2),
+                WaitAndSet(values, 10, 3),
+                WaitAndSet(values, 1, 0)
             });
+            results.Should().BeEquivalentTo(new[] { 1, 1000, 100, 10 });
 
-            var task1Result = await task1;
-            var task2Result = await task2;
-
-            task1Result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4 });
-            task2Result.Should().BeEquivalentTo(new[] { 4, 3, 2, 1 });
-
-            static async ETask<int> GetValueWithDelay(int v, int delayMilliSeconds)
+            static async ETask<int> WaitAndSet(bool[] values, int value, int index)
             {
-                await ETask.Delay(delayMilliSeconds);
-                return v;
+                if (index == 0)
+                {
+                    values![0] = true;
+                }
+                else
+                {
+                    await ETask.WaitUntil(() => values![index - 1]);
+                    values![index] = true;
+                }
+                return value;
             }
         }
     }
@@ -254,19 +269,23 @@ public class ETask_T_Tests
                 isCanceled.Should().BeTrue();
             }
 
-            ETask<string> Func()
+            async ETask<string> Func()
             {
-                return ETask.FromResult("a");
+                await ETask.Yield();
+                await ETask.Yield();
+                return "a";
             }
 
             async ETask<string> Error()
             {
+                await ETask.Yield();
                 await ETask.Yield();
                 throw new Exception();
             }
 
             async ETask<string> Cancel()
             {
+                await ETask.Yield();
                 await ETask.Yield();
                 var token = new CancellationToken(true);
                 token.ThrowIfCancellationRequested();

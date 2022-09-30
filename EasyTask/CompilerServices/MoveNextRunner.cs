@@ -1,4 +1,5 @@
-﻿using EasyTask.Sources;
+﻿using EasyTask.Pools;
+using EasyTask.Sources;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -7,10 +8,9 @@ using System.Runtime.CompilerServices;
 
 namespace EasyTask.CompilerServices
 {
-    internal interface IMoveNextRunner
+    internal interface IMoveNextRunner : IPoolItem
     {
         Action InvokeMoveNext { get; }
-        void Return();
     }
 
     internal sealed class MoveNextRunner<TStateMachine> : ETaskCompletionSourceBase<MoveNextRunner<TStateMachine>>, IMoveNextRunner

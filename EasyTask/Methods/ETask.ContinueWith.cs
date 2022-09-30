@@ -1,4 +1,5 @@
-﻿using EasyTask.Promises;
+﻿using EasyTask.Pools;
+using EasyTask.Promises;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -34,6 +35,11 @@ namespace EasyTask
                 {
                     return FromException(exception);
                 }
+                finally
+                {
+                    if (source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
             }
 
             return ContinuePromise.Create(in this, continuation, in cancellationToken).Task;
@@ -61,6 +67,11 @@ namespace EasyTask
                 catch (Exception exception)
                 {
                     return FromException<TResult>(exception);
+                }
+                finally
+                {
+                    if (source is IPoolItem poolItem)
+                        poolItem.Return(true);
                 }
             }
 
@@ -91,6 +102,11 @@ namespace EasyTask
                 {
                     return FromException(exception);
                 }
+                finally
+                {
+                    if (source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
             }
 
             return ContinueWithStatePromise.Create(in this, continuation, state, in cancellationToken).Task;
@@ -119,6 +135,11 @@ namespace EasyTask
                 {
                     return FromException<TResult>(exception);
                 }
+                finally
+                {
+                    if (source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
             }
 
             return ContinueWithStatePromise<TResult>.Create(in this, continuation, state, in cancellationToken).Task;
@@ -144,7 +165,15 @@ namespace EasyTask
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
-                continuation.Invoke(prevTask);
+                try
+                {
+                    continuation.Invoke(prevTask);
+                }
+                finally
+                {
+                    if (prevTask.source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
                 TrySetResult();
             }
 
@@ -179,7 +208,15 @@ namespace EasyTask
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
-                continuation.Invoke(prevTask, state);
+                try
+                {
+                    continuation.Invoke(prevTask, state);
+                }
+                finally
+                {
+                    if (prevTask.source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
                 TrySetResult();
             }
 
@@ -214,7 +251,16 @@ namespace EasyTask
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
-                var result = continuation.Invoke(prevTask);
+                TResult? result;
+                try
+                {
+                    result = continuation.Invoke(prevTask);
+                }
+                finally
+                {
+                    if (prevTask.source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
                 TrySetResult(result);
             }
 
@@ -226,8 +272,6 @@ namespace EasyTask
                 continuation = null;
             }
         }
-
-        
 
         internal sealed class ContinueWithStatePromise<TResult> 
             : ContinuePromiseBase<ContinueWithStatePromise<TResult>, TResult>
@@ -252,7 +296,16 @@ namespace EasyTask
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override void OnTrySetResult()
             {
-                var result = continuation.Invoke(prevTask, state);
+                TResult? result;
+                try
+                {
+                    result = continuation.Invoke(prevTask, state);
+                }
+                finally
+                {
+                    if (prevTask.source is IPoolItem poolItem)
+                        poolItem.Return(true);
+                }
                 TrySetResult(result);
             }
 

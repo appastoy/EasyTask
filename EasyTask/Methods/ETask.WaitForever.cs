@@ -10,9 +10,9 @@ namespace EasyTask
         /// </summary>
         /// <returns>Awaitable</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static WaitForeverAwaitable WaitForever() => default;
+        public static __WaitForeverAwaitable WaitForever() => default;
 
-        public readonly struct WaitForeverAwaitable
+        public readonly struct __WaitForeverAwaitable
         {
             public Awaiter GetAwaiter() => default;
 

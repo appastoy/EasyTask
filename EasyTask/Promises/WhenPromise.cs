@@ -86,7 +86,7 @@ namespace EasyTask.Promises
         protected override void Reset()
         {
             base.Reset();
-            if (tasks is IListPoolItem item)
+            if (tasks is IPoolItem item)
                 item.Return();
             tasks = null;
             countCompleted = 0;

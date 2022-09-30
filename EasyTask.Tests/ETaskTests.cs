@@ -341,28 +341,28 @@ public class ETask_Tests
         ETask.RunSynchronously(Func);
         static async ETask Func()
         {
-            var value = 0;
+            var result = 0;
             await ETask.WhenAny(
-                SetValueWithDelay(1, 1),
-                SetValueWithDelay(2, 10000),
-                SetValueWithDelay(3, 100000),
-                SetValueWithDelay(4, 1000000));
-            value.Should().Be(1);
+                WaitAndSet(1, 2),
+                WaitAndSet(10000, 1),
+                WaitAndSet(100000, 4),
+                WaitAndSet(1000000, 3));
+            result.Should().Be(2);
 
-            value = 0;
-            await ETask.WhenAny(new List<ETask>
+            result = 0;
+            await ETask.WhenAny(new List<ETask> 
             {
-                SetValueWithDelay(1, 1),
-                SetValueWithDelay(2, 10000),
-                SetValueWithDelay(3, 100000),
-                SetValueWithDelay(4, 1000000)
+                WaitAndSet(100000, 2),
+                WaitAndSet(10000, 1),
+                WaitAndSet(1, 4),
+                WaitAndSet(1000000, 3)
             });
-            value.Should().Be(1);
+            result.Should().Be(4);
 
-            async ETask SetValueWithDelay(int v, int delayMilliSeconds)
+            async ETask WaitAndSet(int waitMilliseconds, int value)
             {
-                await ETask.Delay(delayMilliSeconds);
-                value = v;
+                await ETask.Delay(waitMilliseconds);
+                result = value;
             }
         }
     }
@@ -373,39 +373,39 @@ public class ETask_Tests
         ETask.RunSynchronously(Func);
         static async ETask Func()
         {
-            var value1 = 0;
-            var value2 = 0;
+            var result = false;
+            var values = new bool[4];
+            await ETask.WhenAll(
+                WaitAndSet(values, 2),
+                WaitAndSet(values, 1),
+                WaitAndSet(values, 0),
+                WaitAndSet(values, 3));
+            result.Should().BeTrue();
 
-            var task1 = ETask.WhenAll(
-                SetValue1WithDelay(1, 1),
-                SetValue1WithDelay(2, 2),
-                SetValue1WithDelay(3, 3),
-                SetValue1WithDelay(4, 20));
-
-            var task2 = ETask.WhenAll(new List<ETask>
+            result = false;
+            values = new bool[4];
+            await ETask.WhenAll(new List<ETask>
             {
-                SetValue2WithDelay(5, 1),
-                SetValue2WithDelay(6, 2),
-                SetValue2WithDelay(7, 3),
-                SetValue2WithDelay(8, 20)
+                WaitAndSet(values, 1),
+                WaitAndSet(values, 2),
+                WaitAndSet(values, 3),
+                WaitAndSet(values, 0)
             });
+            result.Should().BeTrue();
 
-            await task1;
-            await task2;
-
-            value1.Should().Be(4);
-            value2.Should().Be(8);
-
-            async ETask SetValue1WithDelay(int v, int delayMilliSeconds)
+            async ETask WaitAndSet(bool[] values, int index)
             {
-                await ETask.Delay(delayMilliSeconds);
-                value1 = v;
-            }
-
-            async ETask SetValue2WithDelay(int v, int delayMilliSeconds)
-            {
-                await ETask.Delay(delayMilliSeconds);
-                value2 = v;
+                if (index == 0)
+                {
+                    values![0] = true;
+                }
+                else
+                {
+                    await ETask.WaitUntil(() => values![index - 1]);
+                    values![index] = true;
+                }
+                if (values.All(v => v))
+                    result = true;
             }
         }
     }
@@ -461,7 +461,7 @@ public class ETask_Tests
                 threadIdInContinueWith.Should().Be(threadId);
                 result.Should().Be("ad");
             }
-
+            
             {
                 bool isFault = false;
                 await Error().ContinueWith(task => isFault = task.IsFaulted);
@@ -474,20 +474,24 @@ public class ETask_Tests
                 isCanceled.Should().BeTrue();
             }
 
-            ETask Action()
+            async ETask Action()
             {
+                await ETask.Yield();
+                await ETask.Yield();
                 list.Add("a");
-                return ETask.CompletedTask;
             }
 
             async ETask Error()
             {
                 await ETask.Yield();
+                await ETask.Yield();
                 throw new Exception();
+                
             }
 
             async ETask Cancel()
             {
+                await ETask.Yield();
                 await ETask.Yield();
                 var token = new CancellationToken(true);
                 token.ThrowIfCancellationRequested();
