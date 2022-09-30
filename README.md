@@ -1,5 +1,7 @@
 # EasyTask
 
+[![.NET Test](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_test.yml/badge.svg?branch=develop)](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_test.yml)
+
 This project is for learning purpose to better understand the "Task". 
 However, I made this for practical use. So I considered optimization and maintainability.
 I didn't fully test all areas, but most methods were tested through unit tests. 
