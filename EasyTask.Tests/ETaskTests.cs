@@ -318,14 +318,14 @@ public class ETask_Tests
                 .ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
-            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(runThreadId);
 
             await ETask.SwitchToMainThread();
 
             await ETask.Run(Func2).ConfigureAwait(false);
 
             runThreadId.Should().NotBe(threadId);
-            Environment.CurrentManagedThreadId.Should().NotBe(threadId);
+            Environment.CurrentManagedThreadId.Should().Be(runThreadId);
 
             async ETask Func2()
             {
