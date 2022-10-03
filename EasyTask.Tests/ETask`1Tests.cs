@@ -122,7 +122,7 @@ public class ETask_T_Tests
             static async ETask<int> Func2()
             {
                 await ETask.Yield();
-                await ETask.Yield();
+                await ETask.Delay(10);
                 return Environment.CurrentManagedThreadId;
             }
         }
