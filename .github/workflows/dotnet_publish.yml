@@ -30,14 +30,15 @@ jobs:
       
     - name: Bump version
       run: |
-        PROJECT_VERSION=$(grep -oP "(?<=<Version>)[^<]+" $PROJECT_PATH)
-        LATEST_VERSION=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "\d+$")
+        PROJECT_VERSION=$(grep -oP "(?<=<Version>)[^<]+" $PROJECT_PATH) && echo PROJECT_VERSION: $PROJECT_VERSION
+        LATEST_PATCH=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "\d+$") &&  && echo LATEST_PATCH: $LATEST_PATCH
         if [ -z "$LATEST_VERSION" ]
         then
           PACKAGE_VERSION="$PROJECT_VERSION.0"
         else
-          PACKAGE_VERSION="$PROJECT_VERSION.$(( LATEST_VERSION + 1 ))"
+          PACKAGE_VERSION="$PROJECT_VERSION.$(( LATEST_PATCH + 1 ))"
         fi
+        echo PACKAGE_VERSION: $PACKAGE_VERSION
         sed -i "s+<Version>$PROJECT_VERSION</Version>+<Version>$PACKAGE_VERSION</Version>+g" $PROJECT_PATH
       
     - name: Pack package
