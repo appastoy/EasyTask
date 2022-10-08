@@ -11,6 +11,9 @@ jobs:
     name: build, pack & publish
     runs-on: ubuntu-latest
     environment: NUGET_API_KEY
+    env:
+      PROJECT_PATH: EasyTask/EasyTask.csproj
+      NUGET_PUSH_KEY: ${{ secrets.NUGET_API_KEY }}
     steps:
     - uses: actions/checkout@v3
     
@@ -18,40 +21,39 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 6.0.x
+        
+    - name: Restore project
+      run: dotnet restore $PROJECT_PATH
             
-    - name: Publish on version change
-      id: publish_nuget
-      uses: brandedoutcast/publish-nuget@v2
-      with:
-        # Filepath of the project to be packaged, relative to root of repository
-        PROJECT_FILE_PATH: EasyTask/EasyTask.csproj
+    - name: Build project
+      run: dotnet publish $PROJECT_PATH --no-restore -c Release
+      
+    - name: Bump version
+      run: |
+        PROJECT_VERSION=$(grep -oP "(?<=\<Version\>)[^<]+" $PROJECT_PATH)
+        LATEST_VERSION=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "(?<=\d+\.\d+\.)\d+")
+        if [ -z "$LATEST_VERSION" ]
+        then
+          PACKAGE_VERSION="$PROJECT_VERSION.0"
+        else
+          PACKAGE_VERSION="$PROJECT_VERSION.$(( LATEST_VERSION + 1 ))"
+        fi
+        sed -i "s+<Version>$PROJECT_VERSION</Version>+<Version>$PACKAGE_VERSION</Version>+g" $PROJECT_PATH
+      
+    - name: Pack package
+      run: dotnet pack $PROJECT_PATH --no-build -c Release --include-symbols -property:SymbolPackageFormat=snupkg --output .
+    
+    - name: Push to nuget gallary
+      run: |
+        dotnet nuget push *.nupkg \
+          --source https://api.nuget.org/v3/index.json \
+          --api-key $NUGET_PUSH_KEY \
+          --skip-duplicate
+          
+    - name: Tagging version to git
+      run: |
+        git tag v$PACKAGE_VERSION
+        git push origin v$PACKAGE_VERSION
 
-        # Platform target to compile (default is empty/AnyCPU)
-        # BUILD_PLATFORM: x64          
-
-        # NuGet package id, used for version detection & defaults to project name
-        PACKAGE_NAME: appastoy.EasyTask
-
-        # Filepath with version info, relative to root of repository & defaults to PROJECT_FILE_PATH
-        # VERSION_FILE_PATH: Directory.Build.props
-
-        # Regex pattern to extract version info in a capturing group
-        VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
-
-        # Useful with external providers like Nerdbank.GitVersioning, ignores VERSION_FILE_PATH & VERSION_REGEX
-        # VERSION_STATIC: 1.0.0
-
-        # Flag to toggle git tagging, enabled by default
-        # TAG_COMMIT: true
-
-        # Format of the git tag, [*] gets replaced with actual version
-        TAG_FORMAT: v*
-
-        # API key to authenticate with NuGet server
-        NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
-
-        # NuGet server uri hosting the packages, defaults to https://api.nuget.org
-        # NUGET_SOURCE: https://api.nuget.org
-
-        # Flag to toggle pushing symbols along with nuget package to the server, disabled by default
-        # INCLUDE_SYMBOLS: false
+    
+      
