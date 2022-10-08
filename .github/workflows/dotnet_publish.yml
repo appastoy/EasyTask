@@ -30,8 +30,8 @@ jobs:
       
     - name: Bump version
       run: |
-        PROJECT_VERSION=$(grep -oP "(?<=\<Version\>)[^<]+" $PROJECT_PATH)
-        LATEST_VERSION=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "(?<=\d+\.\d+\.)\d+")
+        PROJECT_VERSION=$(grep -oP "(?<=<Version>)[^<]+" $PROJECT_PATH)
+        LATEST_VERSION=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "\d+$")
         if [ -z "$LATEST_VERSION" ]
         then
           PACKAGE_VERSION="$PROJECT_VERSION.0"
