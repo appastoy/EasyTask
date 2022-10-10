@@ -29,9 +29,11 @@ jobs:
       run: dotnet publish $PROJECT_PATH --no-restore -c Release
       
     - name: Bump version
+      id: bump-version
       run: |
         PROJECT_VERSION=$(grep -oP "(?<=<Version>)[^<]+" $PROJECT_PATH) && echo PROJECT_VERSION: $PROJECT_VERSION
-        LATEST_PATCH=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "\d+$") && echo LATEST_PATCH: $LATEST_PATCH
+        LATEST_PATCH=$(git tag | grep "$PROJECT_VERSION" | sort -V | tail -1 | grep -oP "\d+$")
+        echo LATEST_PATCH: $LATEST_PATCH
         if [ -z "$LATEST_VERSION" ]
         then
           PACKAGE_VERSION="$PROJECT_VERSION.0"
@@ -39,10 +41,17 @@ jobs:
           PACKAGE_VERSION="$PROJECT_VERSION.$(( LATEST_PATCH + 1 ))"
         fi
         echo PACKAGE_VERSION: $PACKAGE_VERSION
+        echo "::set-output name=PACKAGE_VERSION::$PACKAGE_VERSION"
         sed -i "s+<Version>$PROJECT_VERSION</Version>+<Version>$PACKAGE_VERSION</Version>+g" $PROJECT_PATH
       
     - name: Pack package
-      run: dotnet pack $PROJECT_PATH --no-build -c Release --include-symbols -property:SymbolPackageFormat=snupkg --output .
+      run: |
+        dotnet pack $PROJECT_PATH \
+          --no-build \
+          -c Release \
+          --include-symbols 
+          -property:SymbolPackageFormat=snupkg \
+          --output .
     
     - name: Push to nuget gallary
       run: |
@@ -53,8 +62,6 @@ jobs:
           
     - name: Tagging version to git
       run: |
-        git tag v$PACKAGE_VERSION
-        git push origin v$PACKAGE_VERSION
-
-    
-      
+        TAG_NAME="v${{ steps.bump-version.outputs.PACKAGE_VERSION }}"
+        git tag $TAG_NAME
+        git push origin $TAG_NAME
