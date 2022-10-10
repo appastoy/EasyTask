@@ -48,7 +48,7 @@ jobs:
         dotnet pack $PROJECT_PATH \
           --no-build \
           -c Release \
-          --include-symbols 
+          --include-symbols \
           -property:SymbolPackageFormat=snupkg \
           --output .
     
