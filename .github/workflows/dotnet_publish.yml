@@ -5,9 +5,13 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+    types: [ closed ]
 
 jobs:
   publish:
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.merged == true
     name: build, pack & publish
     runs-on: ubuntu-latest
     environment: NUGET_API_KEY
@@ -26,7 +30,7 @@ jobs:
       run: dotnet restore $PROJECT_PATH
             
     - name: Build project
-      run: dotnet publish $PROJECT_PATH --no-restore -c Release
+      run: dotnet build $PROJECT_PATH --no-restore -c Release
       
     - name: Bump version
       id: bump-version
