@@ -3,9 +3,13 @@ name: .NET Publish
 on:
   push:
     branches: [ "master" ]
+    paths:
+    - 'EasyTask/**.*'
   pull_request:
     branches: [ "master" ]
     types: [ closed ]
+    paths:
+    - 'EasyTask/**.*'
 
 jobs:
   publish:
