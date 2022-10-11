@@ -18,7 +18,7 @@ jobs:
       github.event.pull_request.merged == true
     name: build, pack & publish
     runs-on: ubuntu-latest
-    environment: NUGET_API_KEY
+    environment: publish_env
     env:
       PROJECT_PATH: EasyTask/EasyTask.csproj
       NUGET_PUSH_KEY: ${{ secrets.NUGET_API_KEY }}
