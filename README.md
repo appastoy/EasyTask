@@ -1,6 +1,8 @@
 # EasyTask
 
 [![.NET Test](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_test.yml/badge.svg?branch=develop)](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_test.yml)
+[![.NET Publish](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_publish.yml/badge.svg?branch=master)](https://github.com/appastoy/EasyTask/actions/workflows/dotnet_publish.yml)
+[![Nuget](https://img.shields.io/nuget/v/appastoy.EasyTask?label=nuget&logo=nuget)](https://www.nuget.org/packages/appastoy.EasyTask/)
 
 This project is for learning purpose to better understand the "Task". 
 However, I made this for practical use. So I considered optimization and maintainability.
