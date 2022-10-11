@@ -11,107 +11,14 @@ This project is strongly inspired by the [UniTask project](https://github.com/Cy
 But the purpose of this project is different from UniTask that it is not for Unity3d first. 
 It is based on netstandard2.1 and is expected to be used by many dotnet projects.
 
-# Overview
-### ValueTask based
-ETask is based on ValueTask for performance purpose. It has an IValueTaskSource implementation internally.
-```csharp
-interface IETaskSource : IValueTaskSource { ... }
-class ETaskSource : IETaskSource { ... }
-
-struct ETask
-{
-    ...
-    IETaskSource source;
-    ...
-}
+# Installation
+To install with NuGet, just install the `appastoy.EasyTask`:
+```powershell
+Install-Package appastoy.EasyTask
 ```
 <br>
 
-### Using delegate caches
-ETask doesn't use lambda expression internally for avoid generate garbage. <br>
-If lambda has captured the value(not constant), It causes heap allocation. ([C# Does Lambda => generate garbage?](https://stackoverflow.com/questions/7133013/c-sharp-does-lambda-generate-garbage))<br>
-So it uses static delegate caches instead of lamda expression.
-```csharp
-// The style of using lambda style.
-// This is easy and simple. But it generates garbage each use.
-var obj = "abc";
-ThreadPool.QueueUserWorkItem(action => action.Invoke($"{obj}"), Console.WriteLine);
-
-// The style of using static delegate cache.
-// This is more complicate than lambda. But it doesn't generate garbage anything.
-// And also there is no cost to convert static method to action parameter each use.
-static Action<string> OnWorkDelegate = OnWork;
-static void OnWork(string obj) => Console.WriteLine(obj);
-ThreadPool.QueueUserWorkItem(OnWorkDelegate, "abc");
-```
-<br>
-
-### Using various pools
-ETask uses various pools internally for avoid heap allocation and garbage collection.
-
-- The subclasse of __PoolItem\<T>__ is an item and the pool itself.
-    ```csharp
-    public abstract class PoolItem<TItem> : IDisposable where ...
-    {
-        // Use one-way linked list pool.
-        public static TItem Rent() { ... }
-        public void Return() { ... }
-        ...
-    }
-  
-    public sealed class ETaskSource : PoolItem<ETaskSource> { ... }
-
-    var itemRented = ETaskSource.Rent();
-    // Use item.
-    // ...
-    itemRented.Return();
-    ```
-
-- __ListPool__ provides a temporary list of the requested size.
-    ```csharp
-    interface IListPoolItem { void Return(); }
-  
-    class ListItem<T> : PoolItem<ListItem<T>>, IReadOnlyList<T>, IListPoolItem
-    {
-        public static ListItem<T> Rent(int capacity) { ... }
-    }
-
-    var itemRented = ListItem<int>.Rent(10);
-    // Use item.
-    // ...
-    itemRented.Return();
-    ```
-
-- __TuplePool__ provides a temporary tuple. It is the same with C# Tuple.
-    ```csharp
-    class FieldTuple<T1, T2> : PoolItem<FieldTuple<T1, T2>>, IDisposable
-    {
-        public T1 _1;
-        public T2 _2;
-    }
-    ...
-  
-    static class TuplePool
-    {
-        public static FieldTuple<T1, T2> Rent<T1, T2>(T1 _1, T2 _2)
-        {
-            var tuple = FieldTuple<T1, T2>.Rent();
-            tuple._1 = _1;
-            tuple._2 = _2;
-            return tuple;
-        }
-        ...
-    }
-
-    var itemRented = TuplePool.Rent(123, "abc");
-    // Use item.
-    // ...
-    itemRented.Return();
-  ```
-
-<br>
-
-# How to use
+# Quick Start
 ### Run on thread pool
 ```csharp
 // Run action on thread pool.
@@ -358,3 +265,106 @@ ETask.SetMainThreadContext(SynchronizationContext.Current);
 // Forget method is syntax sugar for ignoring compile warning. Actually, Forget method body is empty.
 AsyncETaskVoid().Forget();
 ```
+
+<br>
+
+# Overview
+### ValueTask based
+ETask is based on ValueTask for performance purpose. It has an IValueTaskSource implementation internally.
+```csharp
+interface IETaskSource : IValueTaskSource { ... }
+class ETaskSource : IETaskSource { ... }
+
+struct ETask
+{
+    ...
+    IETaskSource source;
+    ...
+}
+```
+<br>
+
+### Using delegate caches
+ETask doesn't use lambda expression internally for avoid generate garbage. <br>
+If lambda has captured the value(not constant), It causes heap allocation. ([C# Does Lambda => generate garbage?](https://stackoverflow.com/questions/7133013/c-sharp-does-lambda-generate-garbage))<br>
+So it uses static delegate caches instead of lamda expression.
+```csharp
+// The style of using lambda style.
+// This is easy and simple. But it generates garbage each use.
+var obj = "abc";
+ThreadPool.QueueUserWorkItem(action => action.Invoke($"{obj}"), Console.WriteLine);
+
+// The style of using static delegate cache.
+// This is more complicate than lambda. But it doesn't generate garbage anything.
+// And also there is no cost to convert static method to action parameter each use.
+static Action<string> OnWorkDelegate = OnWork;
+static void OnWork(string obj) => Console.WriteLine(obj);
+ThreadPool.QueueUserWorkItem(OnWorkDelegate, "abc");
+```
+<br>
+
+### Using various pools
+ETask uses various pools internally for avoid heap allocation and garbage collection.
+
+- The subclasse of __PoolItem\<T>__ is an item and the pool itself.
+    ```csharp
+    public abstract class PoolItem<TItem> : IDisposable where ...
+    {
+        // Use one-way linked list pool.
+        public static TItem Rent() { ... }
+        public void Return() { ... }
+        ...
+    }
+  
+    public sealed class ETaskSource : PoolItem<ETaskSource> { ... }
+
+    var itemRented = ETaskSource.Rent();
+    // Use item.
+    // ...
+    itemRented.Return();
+    ```
+
+- __ListPool__ provides a temporary list of the requested size.
+    ```csharp
+    interface IListPoolItem { void Return(); }
+  
+    class ListItem<T> : PoolItem<ListItem<T>>, IReadOnlyList<T>, IListPoolItem
+    {
+        public static ListItem<T> Rent(int capacity) { ... }
+    }
+
+    var itemRented = ListItem<int>.Rent(10);
+    // Use item.
+    // ...
+    itemRented.Return();
+    ```
+
+- __TuplePool__ provides a temporary tuple. It is the same with C# Tuple.
+    ```csharp
+    class FieldTuple<T1, T2> : PoolItem<FieldTuple<T1, T2>>, IDisposable
+    {
+        public T1 _1;
+        public T2 _2;
+    }
+    ...
+  
+    static class TuplePool
+    {
+        public static FieldTuple<T1, T2> Rent<T1, T2>(T1 _1, T2 _2)
+        {
+            var tuple = FieldTuple<T1, T2>.Rent();
+            tuple._1 = _1;
+            tuple._2 = _2;
+            return tuple;
+        }
+        ...
+    }
+
+    var itemRented = TuplePool.Rent(123, "abc");
+    // Use item.
+    // ...
+    itemRented.Return();
+  ```
+
+<br>
+

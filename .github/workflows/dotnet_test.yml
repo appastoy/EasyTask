@@ -3,8 +3,19 @@ name: .NET Test
 on:
   push:
     branches: [ "develop" ]
+    paths:
+    - '**.cs'
+    - '**.csproj'
+    - '**.sln'
+    - '**.json'
   pull_request:
+    types: [ opened ]
     branches: [ "develop" ]
+    paths:
+    - '**.cs'
+    - '**.csproj'
+    - '**.sln'
+    - '**.json'
 
 jobs:
   test:
